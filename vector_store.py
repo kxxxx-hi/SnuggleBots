@@ -76,3 +76,6 @@ class VectorStoreManager:
         except Exception as e:
             logger.error(f"Error during vector similarity search: {e}")
             return []
+
+# Backward-compat alias
+VectorStore = VectorStoreManager
