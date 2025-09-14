@@ -1,255 +1,190 @@
-"""
-Vector database and embedding storage for RAG system
-"""
+# vector_store.py
 import os
 import logging
-from typing import List, Dict, Any, Optional
-import chromadb
-from chromadb.config import Settings
+from typing import List, Tuple, Optional
 
-# LangChain components
-try:
-    from langchain_community.vectorstores import Chroma
-    from langchain_openai import OpenAIEmbeddings
-    from langchain_core.documents import Document as LangChainDocument
-    from langchain_community.embeddings import SentenceTransformerEmbeddings
-except ImportError:
-    # Fallback for older versions
-    from langchain.vectorstores import Chroma
-    from langchain.embeddings import OpenAIEmbeddings
-    from langchain.schema import Document as LangChainDocument
-    from langchain.embeddings import SentenceTransformerEmbeddings
+# Silence Chroma telemetry noise in logs
+os.environ.setdefault("CHROMA_TELEMETRY", "False")
 
-from config import (
-    CHROMA_PERSIST_DIRECTORY, 
-    OPENAI_API_KEY, 
-    EMBEDDING_MODEL,
-    MAX_CHUNKS
-)
+from langchain_chroma import Chroma  # modern wrapper (replaces langchain.vectorstores.Chroma)
+# Keep the old name used elsewhere but map to the new class
+from langchain_huggingface import HuggingFaceEmbeddings as SentenceTransformerEmbeddings
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Lightweight loaders for a few common doc types
+from bs4 import BeautifulSoup
+from PyPDF2 import PdfReader
+from docx import Document
+
+logger = logging.getLogger("vector_store")
+logger.setLevel(logging.INFO)
+
+
+def _read_text_file(path: str) -> str:
+    with open(path, "r", encoding="utf-8", errors="ignore") as f:
+        return f.read()
+
+
+def _read_pdf(path: str) -> str:
+    try:
+        reader = PdfReader(path)
+        return "\n".join(page.extract_text() or "" for page in reader.pages)
+    except Exception as e:
+        logger.error(f"Failed to read PDF {path}: {e}")
+        return ""
+
+
+def _read_docx(path: str) -> str:
+    try:
+        doc = Document(path)
+        return "\n".join(p.text for p in doc.paragraphs)
+    except Exception as e:
+        logger.error(f"Failed to read DOCX {path}: {e}")
+        return ""
+
+
+def _read_html(path: str) -> str:
+    try:
+        html = _read_text_file(path)
+        soup = BeautifulSoup(html, "html.parser")
+        return soup.get_text(separator="\n")
+    except Exception as e:
+        logger.error(f"Failed to read HTML {path}: {e}")
+        return ""
+
+
+def _load_file(path: str) -> Tuple[str, str]:
+    """
+    Returns (content, metadata_source)
+    """
+    ext = os.path.splitext(path.lower())[1]
+    if ext in {".md", ".txt", ".rst"}:
+        return _read_text_file(path), path
+    if ext in {".pdf"}:
+        return _read_pdf(path), path
+    if ext in {".docx"}:
+        return _read_docx(path), path
+    if ext in {".html", ".htm"}:
+        return _read_html(path), path
+    # Fallback: try reading as text
+    return _read_text_file(path), path
 
 
 class VectorStore:
-    """Manages vector database operations for RAG system"""
-    
-    def __init__(self, collection_name: str = "rag_documents", use_openai: bool = True):
-        self.collection_name = collection_name
-        self.use_openai = use_openai and OPENAI_API_KEY is not None
-        
-        # Initialize embeddings
-        if self.use_openai:
-            self.embeddings = OpenAIEmbeddings(
-                openai_api_key=OPENAI_API_KEY,
-                model=EMBEDDING_MODEL
-            )
-            logger.info("Using OpenAI embeddings")
-        else:
-            self.embeddings = SentenceTransformerEmbeddings(
-                model_name="all-MiniLM-L6-v2"
-            )
-            logger.info("Using SentenceTransformer embeddings")
-        
-        # Initialize ChromaDB
-        self._initialize_chroma()
-    
-    def _initialize_chroma(self):
-        """Initialize ChromaDB client and collection"""
-        try:
-            # Create persist directory if it doesn't exist
-            os.makedirs(CHROMA_PERSIST_DIRECTORY, exist_ok=True)
-            
-            # Initialize ChromaDB client
-            self.chroma_client = chromadb.PersistentClient(
-                path=CHROMA_PERSIST_DIRECTORY,
-                settings=Settings(
-                    anonymized_telemetry=False,
-                    allow_reset=True
-                )
-            )
-            
-            # Initialize or get collection
-            self.vectorstore = Chroma(
-                client=self.chroma_client,
-                collection_name=self.collection_name,
-                embedding_function=self.embeddings,
-                persist_directory=CHROMA_PERSIST_DIRECTORY
-            )
-            
-            logger.info(f"Vector store initialized with collection: {self.collection_name}")
-            
-        except Exception as e:
-            logger.error(f"Error initializing vector store: {str(e)}")
-            raise
-    
-    def add_documents(self, documents: List[LangChainDocument]) -> List[str]:
-        """Add documents to the vector store"""
-        try:
-            if not documents:
-                logger.warning("No documents to add")
-                return []
-            
-            # Add documents to vector store
-            ids = self.vectorstore.add_documents(documents)
-            
-            # Persist the changes
-            self.vectorstore.persist()
-            
-            logger.info(f"Added {len(documents)} documents to vector store")
-            return ids
-            
-        except Exception as e:
-            logger.error(f"Error adding documents: {str(e)}")
-            raise
-    
-    def add_texts(self, texts: List[str], metadatas: List[Dict[str, Any]] = None) -> List[str]:
-        """Add texts directly to the vector store"""
-        try:
-            if metadatas is None:
-                metadatas = [{}] * len(texts)
-            
-            ids = self.vectorstore.add_texts(texts, metadatas)
-            self.vectorstore.persist()
-            
-            logger.info(f"Added {len(texts)} texts to vector store")
-            return ids
-            
-        except Exception as e:
-            logger.error(f"Error adding texts: {str(e)}")
-            raise
-    
-    def similarity_search(self, query: str, k: int = MAX_CHUNKS) -> List[LangChainDocument]:
-        """Perform similarity search"""
-        try:
-            results = self.vectorstore.similarity_search(query, k=k)
-            logger.info(f"Found {len(results)} similar documents for query")
-            return results
-            
-        except Exception as e:
-            logger.error(f"Error in similarity search: {str(e)}")
-            raise
-    
-    def similarity_search_with_score(self, query: str, k: int = MAX_CHUNKS) -> List[tuple]:
-        """Perform similarity search with scores"""
-        try:
-            results = self.vectorstore.similarity_search_with_score(query, k=k)
-            logger.info(f"Found {len(results)} similar documents with scores")
-            return results
-            
-        except Exception as e:
-            logger.error(f"Error in similarity search with score: {str(e)}")
-            raise
-    
-    def similarity_search_by_vector(self, embedding: List[float], k: int = MAX_CHUNKS) -> List[LangChainDocument]:
-        """Search by vector embedding"""
-        try:
-            results = self.vectorstore.similarity_search_by_vector(embedding, k=k)
-            logger.info(f"Found {len(results)} similar documents by vector")
-            return results
-            
-        except Exception as e:
-            logger.error(f"Error in vector similarity search: {str(e)}")
-            raise
-    
-    def get_collection_info(self) -> Dict[str, Any]:
-        """Get information about the collection"""
-        try:
-            collection = self.chroma_client.get_collection(self.collection_name)
-            count = collection.count()
-            
-            return {
-                "collection_name": self.collection_name,
-                "document_count": count,
-                "embedding_model": EMBEDDING_MODEL if self.use_openai else "all-MiniLM-L6-v2",
-                "persist_directory": CHROMA_PERSIST_DIRECTORY
-            }
-            
-        except Exception as e:
-            logger.error(f"Error getting collection info: {str(e)}")
-            return {}
-    
-    def delete_collection(self):
-        """Delete the entire collection"""
-        try:
-            self.chroma_client.delete_collection(self.collection_name)
-            logger.info(f"Deleted collection: {self.collection_name}")
-            
-        except Exception as e:
-            logger.error(f"Error deleting collection: {str(e)}")
-            raise
-    
-    def reset_collection(self):
-        """Reset the collection (delete and recreate)"""
-        try:
-            self.delete_collection()
-            self._initialize_chroma()
-            logger.info("Collection reset successfully")
-            
-        except Exception as e:
-            logger.error(f"Error resetting collection: {str(e)}")
-            raise
-    
-    def query_with_filters(self, query: str, filter_dict: Dict[str, Any], k: int = MAX_CHUNKS) -> List[LangChainDocument]:
-        """Search with metadata filters"""
-        try:
-            results = self.vectorstore.similarity_search(
-                query, 
-                k=k, 
-                filter=filter_dict
-            )
-            logger.info(f"Found {len(results)} filtered documents")
-            return results
-            
-        except Exception as e:
-            logger.error(f"Error in filtered search: {str(e)}")
-            raise
+    """
+    Minimal vector store manager using:
+      - langchain_huggingface.HuggingFaceEmbeddings
+      - langchain_chroma.Chroma
+    This replaces deprecated LangChain classes and avoids the old schema issue
+    by using a new persist directory.
+    """
 
+    def __init__(
+        self,
+        persist_directory: Optional[str] = None,
+        collection_name: str = "pets",
+        model_name: str = "sentence-transformers/all-MiniLM-L6-v2",
+    ) -> None:
+        repo_root = os.path.dirname(os.path.abspath(__file__))
+        # Use a NEW folder name so we don't reuse an old incompatible schema
+        self.persist_directory = (
+            persist_directory
+            if persist_directory
+            else os.path.join(repo_root, "chroma_db_v2")
+        )
 
-class VectorStoreManager:
-    """High-level manager for vector store operations"""
-    
-    def __init__(self, collection_name: str = "rag_documents", use_openai: bool = True):
-        self.vector_store = VectorStore(collection_name, use_openai)
-    
-    def ingest_documents(self, documents: List[LangChainDocument]) -> bool:
-        """Ingest documents into the vector store"""
+        os.makedirs(self.persist_directory, exist_ok=True)
+
+        logger.info("Loading sentence-transformers model: %s", model_name)
+        # This name matches the package; keeps compatibility with prior code that expected
+        # SentenceTransformerEmbeddings but now pulls from langchain-huggingface.
+        self.embeddings = SentenceTransformerEmbeddings(model_name=model_name)
+
+        logger.info("Initializing Chroma at %s (collection=%s)", self.persist_directory, collection_name)
+        self.vectorstore = Chroma(
+            collection_name=collection_name,
+            embedding_function=self.embeddings,
+            persist_directory=self.persist_directory,
+        )
+
+    # ---------- Public API used by the rest of the app ----------
+
+    def add_directory(self, directory: str) -> dict:
+        """
+        Recursively ingest supported files from a directory.
+        Returns a summary dict.
+        """
+        abs_dir = os.path.abspath(directory)
+        if not os.path.isdir(abs_dir):
+            return {"success": False, "error": f"Directory not found: {abs_dir}"}
+
+        texts: List[str] = []
+        metadatas: List[dict] = []
+
+        supported_exts = {".txt", ".md", ".rst", ".pdf", ".docx", ".html", ".htm"}
+        count = 0
+
+        for root, _, files in os.walk(abs_dir):
+            for name in files:
+                if os.path.splitext(name.lower())[1] in supported_exts:
+                    path = os.path.join(root, name)
+                    content, src = _load_file(path)
+                    content = (content or "").strip()
+                    if not content:
+                        continue
+                    texts.append(content)
+                    metadatas.append({"source": src})
+                    count += 1
+
+        if not texts:
+            return {"success": True, "documents_processed": 0}
+
         try:
-            if not documents:
-                logger.warning("No documents to ingest")
-                return False
-            
-            self.vector_store.add_documents(documents)
-            logger.info(f"Successfully ingested {len(documents)} documents")
-            return True
-            
+            self.vectorstore.add_texts(texts=texts, metadatas=metadatas)
+            self.vectorstore.persist()
+            logger.info("Ingested %d documents into Chroma", len(texts))
+            return {"success": True, "documents_processed": len(texts)}
         except Exception as e:
-            logger.error(f"Error ingesting documents: {str(e)}")
-            return False
-    
-    def search(self, query: str, k: int = MAX_CHUNKS, with_scores: bool = False) -> List:
-        """Search for relevant documents"""
+            logger.error("Error adding texts to Chroma: %s", e)
+            return {"success": False, "error": str(e)}
+
+    def similarity_search(self, query: str, k: int = 5):
         try:
-            if with_scores:
-                return self.vector_store.vectorstore.similarity_search_with_score(query, k)
-            else:
-                return self.vector_store.vectorstore.similarity_search(query, k)
-                
+            return self.vectorstore.similarity_search(query, k=k)
         except Exception as e:
-            logger.error(f"Error searching: {str(e)}")
+            logger.error("similarity_search failed: %s", e)
             return []
-    
-    def get_stats(self) -> Dict[str, Any]:
-        """Get vector store statistics"""
-        return self.vector_store.get_collection_info()
 
+    def as_retriever(self, k: int = 5):
+        try:
+            return self.vectorstore.as_retriever(search_kwargs={"k": k})
+        except Exception as e:
+            logger.error("as_retriever failed: %s", e)
+            return None
 
-if __name__ == "__main__":
-    # Example usage
-    vector_manager = VectorStoreManager()
-    
-    # Get collection info
-    stats = vector_manager.get_stats()
-    print(f"Vector store stats: {stats}")
-    
-    print("Vector store ready!")
+    def get_stats(self) -> dict:
+        try:
+            # Chroma client introspection is limited; approximate with collection metadata
+            # and persisted doc count by attempting a small search.
+            n_docs = 0
+            try:
+                # Chroma does not expose a count directly via wrapper; do a cheap probe
+                probe = self.vectorstore.similarity_search("the", k=1) or []
+                # If DB is empty, this will be zero. Otherwise not reliable for exact count.
+                # So we just return 0 or >=1 as a hint.
+                n_docs = 0 if len(probe) == 0 else 1
+            except Exception:
+                n_docs = 0
+            return {
+                "vector_store": {"document_count": n_docs},
+                "bm25_documents": 0,  # not tracked here
+                "total_queries": 0,   # not tracked here
+                "avg_confidence": 0.0,
+            }
+        except Exception as e:
+            logger.error("get_stats failed: %s", e)
+            return {
+                "vector_store": {"document_count": 0},
+                "bm25_documents": 0,
+                "total_queries": 0,
+                "avg_confidence": 0.0,
+            }
