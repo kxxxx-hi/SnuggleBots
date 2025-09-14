@@ -27,19 +27,34 @@ import json
 
 from proposed_rag_system import ProposedRAGManager
 
+
 # ---- Custom CSS ----
-st.markdown(
-    """
+st.markdown("""
 <style>
-    .main-header { font-size: 2.5rem; color: #2E8B57; text-align: center; margin-bottom: 2rem; }
-    .metric-card { background-color: #f0f2f6; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #2E8B57; }
-    .answer-box { background-color: #f8f9fa; padding: 1.5rem; border-radius: 0.5rem; border: 1px solid #dee2e6; margin: 1rem 0; white-space: pre-wrap; }
-    .citation-box { background-color: #e8f5e8; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #28a745; margin: 0.5rem 0; }
-    .performance-box { background-color: #fff3cd; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #ffc107; margin: 0.5rem 0; }
+    body {
+        background-color: #f5e1dc;
+    }
+    .main-header {
+        font-size: 2.5rem;
+        color: #da6274;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .stButton button {
+        background-color: #da6274;
+        color: #f5e1dc;
+        border-radius: 0.5rem;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        font-weight: bold;
+    }
+    .stButton button:hover {
+        background-color: #c15365;
+        color: #ffffff;
+    }
 </style>
-""",
-    unsafe_allow_html=True,
-)
+""", unsafe_allow_html=True)
+
 
 # ---- Session state ----
 if "rag_system" not in st.session_state:
