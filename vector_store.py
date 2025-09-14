@@ -41,9 +41,9 @@ from langchain_chroma import Chroma
 logger = logging.getLogger(__name__)
 
 class VectorStoreManager:
-    
-VectorStore = VectorStoreManager
-def __init__(self, persist_dir: str = "./chroma_db", collection_name: str = "pet_docs"):
+    """Manages BM25 and vector-based retrieval using Chroma + HuggingFaceEmbeddings."""
+
+    def __init__(self, persist_dir: str = "./chroma_db", collection_name: str = "pet_docs"):
         self.persist_dir = persist_dir
         os.makedirs(self.persist_dir, exist_ok=True)
 
@@ -82,22 +82,26 @@ def __init__(self, persist_dir: str = "./chroma_db", collection_name: str = "pet
                     continue
                 raise
 
-    # minimal API your app expects:
     def add_texts(self, texts: List[str], metadatas: Optional[List[Dict[str, Any]]] = None, ids: Optional[List[str]] = None):
+        """Add texts to the vector store."""
         return self.vectorstore.add_texts(texts=texts, metadatas=metadatas, ids=ids)
 
     def similarity_search(self, query: str, k: int = 5):
+        """Run similarity search."""
         return self.vectorstore.similarity_search(query, k=k)
 
     def as_retriever(self, search_kwargs: Optional[Dict[str, Any]] = None):
+        """Get a retriever wrapper."""
         kwargs = search_kwargs or {"k": 5}
         return self.vectorstore.as_retriever(search_kwargs=kwargs)
 
     def persist(self):
+        """Persist vector store to disk."""
         try:
             self.vectorstore.persist()
         except Exception:
             pass
+
 
 # Backwards-compat so old imports don't break:
 VectorStore = VectorStoreManager
