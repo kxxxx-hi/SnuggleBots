@@ -10,7 +10,7 @@ from bm25_retriever import BM25Retriever, HybridRetriever
 from rrf_fusion import RRFFusion
 from cross_encoder_reranker import CrossEncoderReranker
 from extractive_generator import ExtractiveAnswerGenerator, ExtractiveAnswer
-from vector_store import VectorStoreManager
+from vector_store import VectorStore
 from document_processor import DocumentProcessor
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ class ProposedRAGSystem:
         
         # Initialize components
         self.document_processor = DocumentProcessor()
-        self.vector_manager = VectorStoreManager(collection_name, use_openai)
+        self.vector_manager = VectorStore(collection_name, use_openai)
         self.bm25_retriever = None
         self.rrf_fusion = RRFFusion(k=60)
         self.reranker = CrossEncoderReranker()
@@ -361,7 +361,7 @@ class ProposedRAGSystem:
         """Reset the system"""
         try:
             # Reset vector store
-            self.vector_manager = VectorStoreManager(self.collection_name, self.use_openai)
+            self.vector_manager = VectorStore(self.collection_name, self.use_openai)
             
             # Reset BM25
             self.bm25_retriever = None
