@@ -31,29 +31,26 @@ from proposed_rag_system import ProposedRAGManager
 # ---- Custom CSS ----
 st.markdown("""
 <style>
-    body {
-        background-color: #f5e1dc;
-    }
-    .main-header {
-        font-size: 2.5rem;
-        color: #da6274;
-        text-align: center;
-        margin-bottom: 2rem;
-    }
-    .stButton button {
-        background-color: #da6274;
-        color: #f5e1dc;
-        border-radius: 0.5rem;
-        border: none;
-        padding: 0.6rem 1.2rem;
-        font-weight: bold;
-    }
-    .stButton button:hover {
-        background-color: #c15365;
-        color: #ffffff;
-    }
+/* Button colors */
+.stButton > button {
+  background-color: #da6274 !important;
+  color: #f5e1dc !important;  /* button text */
+  border: none !important;
+}
+.stButton > button:hover {
+  filter: brightness(0.95);
+}
+
+/* Header title color (your H1) */
+h1, .main-header { color: #da6274 !important; }
+
+/* Ensure body bg matches theme even if iframe/container styles apply */
+html, body, [data-testid="stAppViewContainer"] {
+  background-color: #f5e1dc !important;
+}
 </style>
 """, unsafe_allow_html=True)
+
 
 
 # ---- Session state ----
