@@ -1,3 +1,10 @@
+import sys
+try:
+    import pysqlite3 as _pysqlite3
+    sys.modules["sqlite3"] = _pysqlite3
+except Exception:
+    pass
+
 # vector_store.py
 import sys, os, logging, shutil
 from typing import List, Dict, Any, Optional
@@ -39,7 +46,9 @@ from langchain_chroma import Chroma
 logger = logging.getLogger(__name__)
 
 class VectorStoreManager:
-    def __init__(self, persist_dir: str = "./chroma_db", collection_name: str = "pet_docs"):
+    
+VectorStore = VectorStoreManager
+def __init__(self, persist_dir: str = "./chroma_db", collection_name: str = "pet_docs"):
         self.persist_dir = persist_dir
         os.makedirs(self.persist_dir, exist_ok=True)
 
