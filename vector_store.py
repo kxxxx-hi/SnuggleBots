@@ -1,9 +1,13 @@
+# ---- SQLite shim for Chroma on Streamlit Cloud ----
 import sys
 try:
-    import pysqlite3 as _pysqlite3
-    sys.modules["sqlite3"] = _pysqlite3
+    import pysqlite3
+    sys.modules["sqlite3"] = pysqlite3
+    sys.modules["sqlite"] = pysqlite3
 except Exception:
     pass
+# ---------------------------------------------------
+
 
 # vector_store.py
 import sys, os, logging, shutil
