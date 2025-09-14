@@ -24,8 +24,8 @@ gradio==4.8.0
 
 # Utilities
 python-dotenv==1.0.0
-tiktoken==0.5.2
-numpy==1.24.3
+tiktoken>=0.7,<1
+numpy>=1.26,<2
 pandas==2.0.3
 
 # Optional: For advanced features
