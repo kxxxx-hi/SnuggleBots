@@ -378,22 +378,29 @@ class ProposedRAGSystem:
 
 class ProposedRAGManager:
     """High-level manager for the proposed RAG system"""
-    
+
     def __init__(self, collection_name: str = "proposed_rag_documents", use_openai: bool = True):
+        # Core system
         self.system = ProposedRAGSystem(collection_name, use_openai)
-    
+
+        # Vector store manager (Chroma + HuggingFaceEmbeddings)
+        self.vs = VectorStoreManager(
+            persist_dir="./chroma_db",
+            collection_name=collection_name
+        )
+
     def add_documents(self, file_paths: List[str]) -> Dict[str, Any]:
         """Add documents to the system"""
         return self.system.ingest_documents(file_paths)
-    
+
     def add_directory(self, directory_path: str) -> Dict[str, Any]:
         """Add all documents from a directory"""
         return self.system.ingest_directory(directory_path)
-    
+
     def ask(self, question: str, **kwargs) -> Dict[str, Any]:
         """Ask a question to the system"""
         result = self.system.query(question, **kwargs)
-        
+
         return {
             'answer': result.answer,
             'citations': result.citations,
@@ -402,14 +409,19 @@ class ProposedRAGManager:
             'performance': result.performance_metrics,
             'retrieval_info': result.retrieval_breakdown
         }
-    
+
     def get_stats(self) -> Dict[str, Any]:
         """Get system statistics"""
         return self.system.get_system_stats()
-    
+
     def reset(self):
         """Reset the system"""
         self.system.reset_system()
+        # also clear vector store
+        self.vs = VectorStoreManager(
+            persist_dir="./chroma_db",
+            collection_name="proposed_rag_documents"
+        )
 
 
 if __name__ == "__main__":
