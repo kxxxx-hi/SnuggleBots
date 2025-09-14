@@ -45,3 +45,6 @@ huggingface-hub>=0.20,<0.26
 
 langchain-chroma>=0.1.4
 langchain-huggingface>=0.1.0
+
+langchain-chroma>=0.1.4
+langchain-huggingface>=0.1.0
