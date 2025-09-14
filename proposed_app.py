@@ -9,6 +9,17 @@ except Exception:
     import pysqlite3 as _pysqlite3
     sys.modules["sqlite3"] = _pysqlite3
 
+import sys
+try:
+    import sqlite3
+    v = tuple(map(int, sqlite3.sqlite_version.split(".")))
+    if v < (3, 35, 0):
+        import pysqlite3 as _pysqlite3
+        sys.modules["sqlite3"] = _pysqlite3
+except Exception:
+    import pysqlite3 as _pysqlite3
+    sys.modules["sqlite3"] = _pysqlite3
+
 """
 Streamlit Web Interface for the Proposed RAG System
 """
@@ -17,7 +28,8 @@ import time
 from typing import Dict, Any
 import json
 
-from proposed_rag_system import ProposedRAGManager
+# must be the first Streamlit command
+st.set_page_config(page_title="SnuggleBots", page_icon="🐾", layout="wide")
 
 # Page configuration
 st.set_page_config(
