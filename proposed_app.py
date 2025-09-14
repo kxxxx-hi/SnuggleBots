@@ -92,7 +92,7 @@ def display_query_history():
 
 # ---- Main app ----
 def main():
-    st.markdown('<h1 class="main-header">🐾 Proposed RAG System - Pet Care</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">🐾 Snuggle Bots</h1>', unsafe_allow_html=True)
 
     with st.sidebar:
         st.header("🔧 System Configuration")
