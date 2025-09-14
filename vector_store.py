@@ -1,27 +1,18 @@
-# ---- SQLite shim for Chroma on Streamlit Cloud ----
+# vector_store.py
 import sys
+
 try:
     import pysqlite3
     sys.modules["sqlite3"] = pysqlite3
-    sys.modules["sqlite"] = pysqlite3
-except Exception:
+except ImportError:
     pass
-# ---------------------------------------------------
 
+import chromadb
+from chromadb.config import Settings
 
 # vector_store.py
 import sys, os, logging, shutil
 from typing import List, Dict, Any, Optional
-
-# --- sqlite shim for Chroma on Streamlit Cloud ---
-import sys
-try:
-    import pysqlite3 as _pysqlite3  # provided by requirements.txt
-    sys.modules["sqlite3"] = _pysqlite3
-except Exception:
-    pass
-# -------------------------------------------------
-
 
 # --- SQLite shim MUST run before importing chromadb ---
 try:
