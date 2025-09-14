@@ -10,7 +10,7 @@ from bm25_retriever import BM25Retriever, HybridRetriever
 from rrf_fusion import RRFFusion
 from cross_encoder_reranker import CrossEncoderReranker
 from extractive_generator import ExtractiveAnswerGenerator, ExtractiveAnswer
-from vector_store import VectorStoreManagerManager
+from vector_store import VectorStoreManager
 from document_processor import DocumentProcessor
 
 logger = logging.getLogger(__name__)
