@@ -1,0 +1,15 @@
+[project]
+name = "snugglebots"
+version = "0.1.0"
+
+[tool.poetry.dependencies]
+python = "3.11.*"
+
+[tool.pip]
+# Tell Streamlit Cloud to use pip with requirements.txt
+# This ensures pyproject.toml is only used for Python version
+dependencies = []
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
