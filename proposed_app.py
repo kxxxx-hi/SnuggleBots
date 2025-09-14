@@ -3,7 +3,7 @@ Streamlit Web Interface for the Proposed RAG System
 """
 import streamlit as st
 st.set_page_config(
-    page_title="Proposed RAG System - Pet Care",
+    page_title="Snuggle Bots - Your Pet Adoption Assistant",
     page_icon="🐾",
     layout="wide",
     initial_sidebar_state="expanded",
