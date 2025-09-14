@@ -37,8 +37,10 @@ python-dotenv==1.0.0
 tiktoken>=0.7,<1
 pandas==2.0.3
 
-# Torch CPU only (avoid CUDA)
-torch==2.5.1
+# Torch CPU only
+torch==2.2.2
+torchvision==0.17.2
+torchaudio==2.2.2
 
 # SQLite shim for Chroma on some hosts
 pysqlite3-binary
