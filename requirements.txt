@@ -42,3 +42,4 @@ torch==2.5.1
 
 # SQLite shim for Chroma on some hosts
 pysqlite3-binary
+transformers>=4.36,<5
