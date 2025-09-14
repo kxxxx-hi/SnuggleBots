@@ -31,3 +31,4 @@ pandas==2.0.3
 # Optional: For advanced features
 transformers==4.36.2
 accelerate==0.25.0
+pysqlite3-binary
