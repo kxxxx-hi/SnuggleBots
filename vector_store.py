@@ -2,10 +2,9 @@ import os
 import logging
 from typing import List, Dict, Any
 
-# Silence Chroma telemetry noise
+# Silence Chroma telemetry
 os.environ.setdefault("CHROMA_TELEMETRY", "False")
 
-# Updated imports for LangChain 0.3+
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 
@@ -22,22 +21,22 @@ class VectorStoreManager:
         self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
         self.vectorstore = None
 
-    def initialize(self, documents: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def initialize(
+        self,
+        texts: List[str],
+        metadatas: List[Dict[str, Any]] | None = None
+    ) -> Dict[str, Any]:
         """
-        Initialize Chroma vector store with documents.
+        Initialize Chroma vector store with provided texts and optional metadatas.
         """
         try:
             if os.path.exists(self.persist_directory):
-                # Reuse existing vector DB if available
                 self.vectorstore = Chroma(
                     persist_directory=self.persist_directory,
                     embedding_function=self.embeddings
                 )
                 logger.info("Loaded existing Chroma DB")
             else:
-                # Create a new vector DB
-                texts = [doc["content"] for doc in documents]
-                metadatas = [doc.get("metadata", {}) for doc in documents]
                 self.vectorstore = Chroma.from_texts(
                     texts=texts,
                     embedding=self.embeddings,
@@ -76,6 +75,7 @@ class VectorStoreManager:
         except Exception as e:
             logger.error(f"Error during vector similarity search: {e}")
             return []
+
 
 # Backward-compat alias
 VectorStore = VectorStoreManager
