@@ -384,10 +384,7 @@ class ProposedRAGManager:
         self.system = ProposedRAGSystem(collection_name, use_openai)
 
         # Vector store manager (Chroma + HuggingFaceEmbeddings)
-        self.vs = VectorStoreManager(
-            persist_dir="./chroma_db",
-            collection_name=collection_name
-        )
+        self.vs = VectorStoreManager(persist_dir="./chroma_db", collection_name=collection_name)
 
     def add_documents(self, file_paths: List[str]) -> Dict[str, Any]:
         """Add documents to the system"""
