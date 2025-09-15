@@ -20,28 +20,18 @@ import json
 
 from proposed_rag_system import ProposedRAGManager
 
-# ✅ Page config must be first Streamlit call
-st.set_page_config(
-    page_title="SnuggleBots",
-    page_icon="🐾",
-    layout="wide"
-)
+# ---- Page config (must be first Streamlit call) ----
+st.set_page_config(page_title="SnuggleBots", page_icon="🐾", layout="wide")
 
 # ---- Custom CSS (colors + styling) ----
 st.markdown("""
 <style>
 /* Page background */
-[data-testid="stAppViewContainer"] {
-  background-color: #f5e1dc;
-}
+[data-testid="stAppViewContainer"] { background-color: #f5e1dc; }
 /* Sidebar background */
-[data-testid="stSidebar"], [data-testid="stSidebarContent"] {
-  background-color: #f8d6d0;
-}
+[data-testid="stSidebar"], [data-testid="stSidebarContent"] { background-color: #f8d6d0; }
 /* Title color */
-h1, .main-header {
-  color: #da6274 !important;
-}
+h1, .main-header { color: #da6274 !important; }
 /* Buttons */
 .stButton > button {
   background-color: #da6274 !important;
@@ -50,6 +40,13 @@ h1, .main-header {
   border-radius: 6px !important;
 }
 .stButton > button:hover { filter: brightness(0.95); }
+/* Answer box */
+.answer-box {
+  background: #fff;
+  border: 1px solid #e2e2e2;
+  border-radius: 8px;
+  padding: 16px;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -62,7 +59,7 @@ if "query_history" not in st.session_state:
     st.session_state.query_history = []
 
 
-def initialize_system():
+def initialize_system() -> bool:
     """Initialize the RAG system."""
     try:
         with st.spinner("Initializing RAG system..."):
@@ -80,7 +77,7 @@ def initialize_system():
         return False
 
 
-def display_system_stats():
+def display_system_stats() -> None:
     if st.session_state.rag_system:
         stats = st.session_state.rag_system.get_stats()
         col1, col2, col3, col4 = st.columns(4)
@@ -90,7 +87,7 @@ def display_system_stats():
         col4.metric("📈 Avg Confidence", f"{stats.get('avg_confidence', 0):.3f}")
 
 
-def display_query_history():
+def display_query_history() -> None:
     if st.session_state.query_history:
         st.subheader("📚 Recent Queries")
         for i, q in enumerate(reversed(st.session_state.query_history[-5:])):
@@ -101,7 +98,7 @@ def display_query_history():
                 st.write(f"**Response Time:** {q['response_time']:.2f}s")
 
 
-def main():
+def main() -> None:
     st.markdown('<h1 class="main-header">🐾 SnuggleBots — Proposed RAG System</h1>', unsafe_allow_html=True)
 
     # Sidebar
@@ -167,14 +164,15 @@ def main():
                     "answer": resp["answer"],
                     "confidence": resp["confidence"],
                     "response_time": dt,
+                    "sources": resp.get("sources", []),
                 })
 
                 st.subheader("🤖 Answer")
-                st.markdown(f'<div class="answer-box">{resp["answer"]}</div>', unsafe_allow_html=True)
+                st.markdown(f"<div class='answer-box'>{resp['answer']}</div>", unsafe_allow_html=True)
 
                 c1, c2 = st.columns(2)
-                c1.metric("📊 Confidence", f"{resp["confidence"]:.3f}")
-                c2.metric("📚 Sources", len(resp.get("sources", [])))
+                c1.metric("📊 Confidence", f"{resp['confidence']:.3f}")
+                c2.metric("📚 Sources", len(resp.get('sources', [])))
 
     display_query_history()
 
