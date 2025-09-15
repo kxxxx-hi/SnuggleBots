@@ -1,12 +1,18 @@
-# vector_store.py
+# ---- sqlite shim for Chroma (must be FIRST, before chromadb import) ----
 import sys
-
 try:
-    import pysqlite3
-    sys.modules["sqlite3"] = pysqlite3
-except ImportError:
-    pass
+    import sqlite3
+    ver = tuple(map(int, sqlite3.sqlite_version.split(".")))
+    if ver < (3, 35, 0):
+        import pysqlite3 as _pysqlite3
+        sys.modules["sqlite3"] = _pysqlite3
+except Exception:
+    import pysqlite3 as _pysqlite3
+    sys.modules["sqlite3"] = _pysqlite3
 
+# now safe to import chromadb and the rest
+import os, logging
+from typing import List, Dict, Any, Optional
 import chromadb
 from chromadb.config import Settings
 
