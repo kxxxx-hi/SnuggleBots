@@ -1,4 +1,4 @@
-# ---- sqlite shim for Chroma (must be FIRST, before chromadb import) ----
+# --- SQLite shim: must run BEFORE importing chromadb ---
 import sys
 try:
     import sqlite3
@@ -7,47 +7,34 @@ try:
         import pysqlite3 as _pysqlite3
         sys.modules["sqlite3"] = _pysqlite3
 except Exception:
-    import pysqlite3 as _pysqlite3
-    sys.modules["sqlite3"] = _pysqlite3
-
-# now safe to import chromadb and the rest
-import os, logging
-from typing import List, Dict, Any, Optional
-import chromadb
-from chromadb.config import Settings
-
-# vector_store.py
-import sys, os, logging, shutil
-from typing import List, Dict, Any, Optional
-
-# --- SQLite shim MUST run before importing chromadb ---
-try:
-    import sqlite3
-    ver = tuple(map(int, sqlite3.sqlite_version.split(".")))
-    if ver < (3, 35, 0):
-        import pysqlite3 as _pysqlite3
-        sys.modules["sqlite3"] = _pysqlite3  # monkey-patch
-except Exception:
     try:
         import pysqlite3 as _pysqlite3
         sys.modules["sqlite3"] = _pysqlite3
     except Exception:
         pass
+# -------------------------------------------------------
 
+import os
+import logging
+import shutil
+from typing import List, Dict, Any, Optional
 
-
+# quiet Chroma telemetry
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+os.environ["CHROMA_DISABLE_TELEMETRY"] = "1"
 
 import chromadb
 from chromadb.config import Settings
 
-# LangChain bits
+# LangChain wrappers (pins in requirements.txt)
 from langchain_huggingface import HuggingFaceEmbeddings as SentenceTransformerEmbeddings
 from langchain_chroma import Chroma
 
 logger = logging.getLogger(__name__)
 
+
 class VectorStoreManager:
-    """Manages BM25 and vector-based retrieval using Chroma + HuggingFaceEmbeddings."""
+    """Chroma vector store + sentence-transformer embeddings."""
 
     def __init__(self, persist_dir: str = "./chroma_db", collection_name: str = "pet_docs"):
         self.persist_dir = persist_dir
@@ -60,7 +47,7 @@ class VectorStoreManager:
         self._init_chroma()
 
     def _init_chroma(self):
-        """Init Chroma; if an old schema causes errors, wipe and retry once."""
+        """Init Chroma; if schema is incompatible, wipe once and retry."""
         tried_reset = False
         while True:
             try:
@@ -68,18 +55,16 @@ class VectorStoreManager:
                     collection_name=self.collection_name,
                     persist_directory=self.persist_dir,
                     embedding_function=self.embeddings,
-                    client_settings=Settings(anonymized_telemetry=False, is_persistent=True),
+                    client_settings=Settings(is_persistent=True, anonymized_telemetry=False),
                 )
-                # touch DB to ensure it’s valid
+                # touch DB to validate connection
                 _ = self.vectorstore._collection.count()
                 break
             except Exception as e:
-                msg = str(e)
+                msg = f"{e}"
                 logger.error("Error initializing Chroma: %s", msg)
-                if (not tried_reset) and (
-                    "no such column" in msg.lower()
-                    or "schema" in msg.lower()
-                    or "migration" in msg.lower()
+                if (not tried_reset) and any(
+                    k in msg.lower() for k in ("no such column", "schema", "migration")
                 ):
                     tried_reset = True
                     shutil.rmtree(self.persist_dir, ignore_errors=True)
@@ -88,26 +73,27 @@ class VectorStoreManager:
                     continue
                 raise
 
-    def add_texts(self, texts: List[str], metadatas: Optional[List[Dict[str, Any]]] = None, ids: Optional[List[str]] = None):
-        """Add texts to the vector store."""
+    def add_texts(
+        self,
+        texts: List[str],
+        metadatas: Optional[List[Dict[str, Any]]] = None,
+        ids: Optional[List[str]] = None,
+    ):
         return self.vectorstore.add_texts(texts=texts, metadatas=metadatas, ids=ids)
 
     def similarity_search(self, query: str, k: int = 5):
-        """Run similarity search."""
         return self.vectorstore.similarity_search(query, k=k)
 
     def as_retriever(self, search_kwargs: Optional[Dict[str, Any]] = None):
-        """Get a retriever wrapper."""
         kwargs = search_kwargs or {"k": 5}
         return self.vectorstore.as_retriever(search_kwargs=kwargs)
 
     def persist(self):
-        """Persist vector store to disk."""
         try:
             self.vectorstore.persist()
         except Exception:
             pass
 
 
-# Backwards-compat so old imports don't break:
+# Back-compat for older imports:
 VectorStore = VectorStoreManager
