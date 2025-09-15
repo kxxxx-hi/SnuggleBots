@@ -1,5 +1,5 @@
 [theme]
-primaryColor = "#da6274"          # buttons, sliders, etc.
-backgroundColor = "#f5e1dc"       # page background
+primaryColor = "#da6274"
+backgroundColor = "#f5e1dc"
 secondaryBackgroundColor = "#f8d6d0"
-textColor = "#1f1f1f"
+textColor = "#2b2b2b"
