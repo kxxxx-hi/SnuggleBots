@@ -34,8 +34,10 @@ h1, .main-header { color: #da6274 !important; }
 if "chat" not in st.session_state:
     try:
         st.session_state.chat = SimpleChatManager(system_prompt=(
-            "You are SnuggleBots, a concise pet-adoption assistant. "
-            "Answer clearly. If unsure, say so. No medical advice beyond general care tips."
+            "You are SnuggleBots, a helpful pet adoption assistant. "
+            "You help users find the perfect pet companion. "
+            "When users ask about pets, adoption, or looking for animals, provide helpful information and recommendations. "
+            "Answer clearly and concisely. If unsure, say so. No medical advice beyond general care tips."
         ))
     except Exception as e:
         st.error(f"Failed to initialize chat: {str(e)}")
@@ -71,9 +73,33 @@ if prompt := st.chat_input("Type your question..."):
         with st.spinner("Thinking..."):
             try:
                 t0 = time.time()
-                reply = st.session_state.chat.ask(prompt)
+                reply, recommended_pets = st.session_state.chat.ask_with_pets(prompt)
                 dt = time.time() - t0
+                
+                # Display text response
                 st.markdown(reply or "_(no response)_")
+                
+                # Display pet recommendations if any
+                if recommended_pets:
+                    st.markdown("### 🐾 Recommended Pets")
+                    for pet in recommended_pets:
+                        with st.container():
+                            col1, col2 = st.columns([1, 2])
+                            
+                            with col1:
+                                try:
+                                    st.image(pet["image_url"], width=150, caption=pet["name"])
+                                except Exception as e:
+                                    st.error(f"Could not load image for {pet['name']}")
+                                    st.write("🖼️ Image placeholder")
+                            
+                            with col2:
+                                st.markdown(f"**{pet['name']}** - {pet['type']} ({pet['breed']})")
+                                st.markdown(f"**Age:** {pet['age']} | **Gender:** {pet['gender']} | **Size:** {pet['size']}")
+                                st.markdown(f"**Description:** {pet['description']}")
+                                st.markdown(f"**ID:** #{pet['id']}")
+                                st.markdown("---")
+                
                 st.caption(f"Response time: {dt:.2f}s")
                 st.session_state.messages.append({"role": "assistant", "content": reply or ""})
             except Exception as e:
