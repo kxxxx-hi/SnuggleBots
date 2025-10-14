@@ -104,8 +104,31 @@ if prompt := st.chat_input("Type your question..."):
                 st.session_state.messages.append({"role": "assistant", "content": reply or ""})
             except Exception as e:
                 error_msg = str(e)
-                if "rate_limit" in error_msg.lower():
-                    st.error("⚠️ OpenAI rate limit exceeded. Please try again in a moment or check your API quota.")
+                if "rate_limit" in error_msg.lower() or "quota" in error_msg.lower():
+                    st.warning("⚠️ OpenAI quota exceeded. The chat feature is temporarily limited, but you can still browse available pets below!")
+                    # Still show pet recommendations even if chat fails
+                    try:
+                        _, recommended_pets = st.session_state.chat.ask_with_pets(prompt)
+                        if recommended_pets:
+                            st.markdown("### 🐾 Available Pets")
+                            for pet in recommended_pets:
+                                with st.container():
+                                    col1, col2 = st.columns([1, 2])
+                                    
+                                    with col1:
+                                        try:
+                                            st.image(pet["image_url"], width=150, caption=pet["name"])
+                                        except Exception:
+                                            st.write("🖼️ Image placeholder")
+                                    
+                                    with col2:
+                                        st.markdown(f"**{pet['name']}** - {pet['type']} ({pet['breed']})")
+                                        st.markdown(f"**Age:** {pet['age']} | **Gender:** {pet['gender']} | **Size:** {pet['size']}")
+                                        st.markdown(f"**Description:** {pet['description']}")
+                                        st.markdown(f"**ID:** #{pet['id']}")
+                                        st.markdown("---")
+                    except Exception:
+                        pass
                 elif "api_key" in error_msg.lower():
                     st.error("⚠️ Invalid API key. Please check your OPENAI_API_KEY in Streamlit secrets.")
                 else:

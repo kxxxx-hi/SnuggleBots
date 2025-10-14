@@ -1,5 +1,7 @@
-[theme]
-primaryColor = "#da6274"
-backgroundColor = "#f5e1dc"
-secondaryBackgroundColor = "#f8d6d0"
-textColor = "#2b2b2b"
+[server]
+# Reduce file watching to prevent inotify issues
+fileWatcherType = "none"
+
+[logger]
+# Reduce logging verbosity
+level = "error"

@@ -24,12 +24,19 @@ class SimpleChatManager:
 
     def ask(self, user_text: str) -> str:
         self.history.append({"role": "user", "content": user_text})
-        resp = self.client.chat.completions.create(
-            model=self.model,
-            temperature=self.temperature,
-            messages=self.history[-20:]  # keep short
-        )
-        answer = resp.choices[0].message.content if resp and resp.choices else ""
+        try:
+            resp = self.client.chat.completions.create(
+                model=self.model,
+                temperature=self.temperature,
+                messages=self.history[-20:]  # keep short
+            )
+            answer = resp.choices[0].message.content if resp and resp.choices else ""
+        except Exception as e:
+            # Fallback response when API quota is exceeded
+            if "quota" in str(e).lower() or "rate_limit" in str(e).lower():
+                answer = "I'm currently experiencing high demand. Please try again in a few minutes. In the meantime, I can still help you find pets to adopt!"
+            else:
+                answer = f"I encountered an error: {str(e)}"
         self.history.append({"role": "assistant", "content": answer})
         return answer
     
