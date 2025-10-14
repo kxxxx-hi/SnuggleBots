@@ -5,7 +5,10 @@ from openai import OpenAI
 class SimpleChatManager:
     """Tiny wrapper around OpenAI Chat Completions. No vector store. No init."""
     def __init__(self, system_prompt: str = "You are a helpful assistant.", model: str = "gpt-4o-mini", temperature: float = 0.2):
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY environment variable is not set")
+        self.client = OpenAI(api_key=api_key)
         self.system_prompt = system_prompt
         self.model = model
         self.temperature = temperature
