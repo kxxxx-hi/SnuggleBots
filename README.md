@@ -1,288 +1,515 @@
-# 🚀 Proposed RAG System - Complete Implementation
+# 🐾 Unified PetBot - Advanced Pet Care & Adoption System
 
-## Overview
+A comprehensive AI-powered system that combines **Retrieval-Augmented Generation (RAG)** for pet care questions with **intelligent chatbot capabilities** for pet adoption assistance. Features hybrid retrieval, intent classification, entity extraction, and seamless integration with Azure cloud services.
 
-This is the complete implementation of the proposed RAG system configuration:
-- **Retriever**: BM25 + all-MiniLM-L6-v2 + RRF (Reciprocal Rank Fusion)
-- **Reranker**: MiniLM cross-encoder on top-20 documents
-- **Generation**: Extractive with citations + optional polish
+## ✨ Key Features
+
+### 🧠 **Advanced RAG System**
+- **Hybrid Retrieval**: BM25 + Dense embeddings (all-MiniLM-L6-v2) with RRF fusion
+- **Smart Reranking**: Cross-encoder reranking for improved relevance
+- **Multi-format Support**: PDF, TXT, MD, DOCX document processing
+- **Free LLM Integration**: Groq, DeepSeek, and Hugging Face with intelligent fallbacks
+- **941 Document Chunks**: Comprehensive pet care knowledge base
+
+### 🤖 **Intelligent Chatbot**
+- **Intent Classification**: Distinguishes between pet adoption and pet care queries
+- **Entity Extraction**: NER model extracts pet types, breeds, locations, and attributes
+- **Multi-Turn Conversations**: Context-aware responses with session tracking
+- **Entity Accumulation**: Builds up pet preferences across conversation turns
+- **Smart Routing**: Automatically directs queries to appropriate systems
+- **Conversation State Management**: Maintains context across multiple interactions
+
+### ☁️ **Azure Integration** ⚡ **OPTIMIZED**
+- **Cloud Storage**: Azure Blob Storage for models and data
+- **Advanced Search**: FAISS-based similarity search with BM25
+- **Scalable Architecture**: Production-ready cloud deployment
+- **Instant Search**: Pre-loaded components for <1 second response times
+- **Smart Caching**: 5-minute result caching for repeated queries
+- **6,956 Pet Database**: Comprehensive adoption database with 401 breeds
 
 ## 🏗️ System Architecture
 
 ```
-Query → BM25 Retrieval → RRF Fusion → Cross-encoder Reranking → Extractive Generation → Answer
-       ↓                ↓            ↓                        ↓
-   Dense Retrieval → Combined → Filtered Results → Citations
+User Query
+    ↓
+Intent Classification (Adoption vs Care)
+    ↓
+┌─────────────────┬─────────────────┐
+│   Pet Adoption  │   Pet Care      │
+│   (Azure Search)│   (RAG System)  │
+└─────────────────┴─────────────────┘
+    ↓
+Entity Extraction & Response Generation
+    ↓
+Unified Response
 ```
 
-### Components
-
-1. **BM25 Retrieval** (`bm25_retriever.py`)
-   - Keyword-based search using BM25 algorithm
-   - Handles exact term matching and frequency weighting
-   - Fast retrieval for specific terms
-
-2. **RRF Fusion** (`rrf_fusion.py`)
-   - Combines BM25 and dense retrieval results
-   - Uses Reciprocal Rank Fusion algorithm
-   - Balances keyword and semantic search
-
-3. **Cross-encoder Reranker** (`cross_encoder_reranker.py`)
-   - Reranks top-20 documents using cross-attention
-   - Significantly improves precision@1
-   - Uses MiniLM cross-encoder model
-
-4. **Extractive Generator** (`extractive_generator.py`)
-   - Generates answers by extracting relevant sentences
-   - Provides precise citations and source attribution
-   - No hallucination risk
-
-5. **Main System** (`proposed_rag_system.py`)
-   - Orchestrates all components
-   - Handles document ingestion and query processing
-   - Provides performance metrics and statistics
-
-## 📊 Performance Results
-
-Based on testing with pet care documents:
-
-| Metric | Current System | Proposed System | Improvement |
-|--------|----------------|-----------------|-------------|
-| **Precision@1** | 0.750 | 0.880 | +17.3% |
-| **Citation Quality** | 0.650 | 0.920 | +41.5% |
-| **Response Time** | 800ms | 260ms | +67% faster |
-| **Cost per Query** | $0.002 | $0.0005 | -75% |
-| **Average Confidence** | 0.780 | 0.875 | +12.2% |
-
-## 🚀 Quick Start
-
-### 1. Install Dependencies
-
-```bash
-pip install rank-bm25 nltk sentence-transformers
-```
-
-### 2. Run the Test
-
-```bash
-python test_proposed_system.py
-```
-
-### 3. Launch Web Interface
-
-```bash
-streamlit run proposed_app.py
-```
-
-### 4. Use in Python
-
-```python
-from proposed_rag_system import ProposedRAGManager
-
-# Initialize system
-rag = ProposedRAGManager()
-
-# Add documents
-rag.add_directory("documents")
-
-# Ask questions
-response = rag.ask("What should I feed my cat?")
-print(f"Answer: {response['answer']}")
-print(f"Confidence: {response['confidence']:.3f}")
-```
-
-## 📁 File Structure
+## 📁 Project Structure
 
 ```
 PLP RAG/
-├── bm25_retriever.py          # BM25 retrieval system
-├── rrf_fusion.py              # Reciprocal Rank Fusion
-├── cross_encoder_reranker.py  # Cross-encoder reranking
-├── extractive_generator.py    # Extractive answer generation
-├── proposed_rag_system.py     # Main system integration
-├── proposed_app.py            # Streamlit web interface
-├── test_proposed_system.py    # Test script
-├── rag_config_comparison.py   # Configuration comparison
-├── proposed_system_demo.py    # Demo implementation
-├── implementation_guide.md    # Detailed implementation guide
-└── PROPOSED_SYSTEM_README.md  # This file
+├── 🧠 **RAG System** (`rag_system/`)
+│   ├── bm25_retriever.py          # BM25 keyword retrieval
+│   ├── cross_encoder_reranker.py  # Document reranking
+│   ├── document_processor.py      # Multi-format document processing
+│   ├── free_llm_generator.py     # LLM integration (Groq, DeepSeek)
+│   ├── proposed_rag_system.py    # Main RAG orchestrator
+│   ├── rrf_fusion.py             # Rank fusion algorithm
+│   └── vector_store.py           # ChromaDB vector storage
+│
+├── 🤖 **Chatbot Flow** (`chatbot_flow/`)
+│   ├── chatbot_pipeline.py       # Main chatbot logic
+│   ├── entity_extractor.py       # NER for pet entities
+│   ├── intent_classifier.py      # Intent classification
+│   ├── responses.py              # Response templates
+│   └── synonyms.py               # Entity normalization
+│
+├── ☁️ **Azure System** (`azure_system/`)
+│   └── azure_petbot_app.py       # Azure pet search app
+│
+├── 🚀 **Applications** (`apps/`)
+│   ├── optimized_unified_app.py  # Optimized unified app
+│   └── unified_petbot_app.py     # Main unified application
+│
+├── 🧪 **Tests** (`tests/`)
+│   └── test_unified_integration.py # Integration tests
+│
+├── 💬 **Multi-Turn Scripts**
+│   ├── multi_turn_chat.py          # Interactive multi-turn chat
+│   └── multi_turn_demo.py          # Automated conversation demos
+│
+├── 📚 **Data & Models**
+│   ├── documents/                # Pet care knowledge base
+│   ├── models/                   # Pre-trained ML models
+│   ├── pet_retrieval/            # Azure components
+│   └── chroma_db/                # Vector database
+│
+└── 📖 **Documentation**
+    ├── AZURE_SETUP.md           # Azure configuration guide
+    └── PROJECT_ORGANIZATION.md  # Project organization details
 ```
 
-## 🔧 Configuration Options
+## 🚀 Quick Start
 
-### Query Parameters
+### 1. **Environment Setup**
+```bash
+# Clone and navigate to project
+cd "PLP RAG"
 
-```python
-response = rag.ask(
-    question="What should I feed my cat?",
-    use_reranking=True,        # Enable cross-encoder reranking
-    rerank_threshold=0.5,      # Minimum score threshold
-    max_rerank=20              # Max documents to rerank
-)
+# Create and activate virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements_stable.txt
 ```
 
-### System Parameters
-
+### 2. **API Keys Configuration**
+Create `api_keys.py` or set environment variables:
 ```python
-# Initialize with custom settings
-rag = ProposedRAGManager(
-    collection_name="my_documents",
-    use_openai=False  # Use SentenceTransformer instead
-)
+# api_keys.py
+GROQ_API_KEY = "your_groq_key_here"
+DEEPSEEK_API_KEY = "your_deepseek_key_here"
 ```
 
-## 📈 Performance Monitoring
-
-The system provides detailed performance metrics:
-
-```python
-stats = rag.get_stats()
-print(f"Total queries: {stats['total_queries']}")
-print(f"Average confidence: {stats['avg_confidence']:.3f}")
-print(f"Average response time: {stats['avg_response_time']:.1f}ms")
+Or export environment variables:
+```bash
+export GROQ_API_KEY="your_groq_key_here"
+export DEEPSEEK_API_KEY="your_deepseek_key_here"
 ```
 
-## 🎯 Key Features
+### 3. **Run the Unified Application** ⚡ **OPTIMIZED**
+```bash
+# Activate virtual environment
+source .venv/bin/activate
 
-### 1. Hybrid Retrieval
-- Combines keyword (BM25) and semantic (dense) search
-- Better recall for diverse query types
-- Robust fusion using RRF algorithm
+# Run the optimized unified app (pre-loads all components)
+streamlit run apps/unified_petbot_app.py --server.port 8503
 
-### 2. Precision Reranking
-- Cross-encoder reranking improves precision@1 by ~17%
-- Filters out irrelevant documents
-- Configurable threshold for quality control
-
-### 3. Extractive Generation
-- No hallucination risk
-- Precise source attribution
-- Clear citations with relevance scores
-
-### 4. Cost Efficiency
-- 75% reduction in API costs
-- No ongoing OpenAI charges for generation
-- Local processing for most operations
-
-### 5. Performance Optimization
-- Average 260ms response time
-- Efficient batch processing
-- Caching and optimization strategies
-
-## 🔍 Example Queries
-
-The system excels at pet care questions:
-
-- **"What should I feed my cat?"** → Detailed nutrition advice with citations
-- **"How often should I take my dog to the vet?"** → Veterinary care recommendations
-- **"What are the signs of a healthy pet?"** → Health indicators and monitoring
-- **"How do I care for a rabbit?"** → Species-specific care instructions
-- **"What vaccinations does my dog need?"** → Vaccination schedules and requirements
-
-## 🛠️ Advanced Usage
-
-### Custom Document Processing
-
-```python
-# Add specific files
-rag.add_documents(["path/to/file1.txt", "path/to/file2.pdf"])
-
-# Add entire directory
-rag.add_directory("path/to/documents")
+# The app will show "🚀 Initializing PetBot systems..." during startup
+# After initialization, all searches are instant!
 ```
 
-### Performance Tuning
+#### **⏱️ First-Time Setup Expectations**
+**First Run (One-time only):**
+- **Duration**: 2-3 minutes
+- **What's happening**: Downloading Azure models (23MB FAISS index, 11MB pets database)
+- **Progress**: You'll see "🚀 Initializing PetBot systems..." with loading spinner
+- **Components**: NER model, MR model, FAISS index, 6,956 pet records
+- **Status**: App accessible at `http://localhost:8503` but still initializing
 
-```python
-# Adjust RRF parameters
-from rrf_fusion import RRFFusion
-rrf = RRFFusion(k=60)  # Higher k = more weight to top results
+**Subsequent Runs:**
+- **Duration**: <10 seconds
+- **What's happening**: Loading cached components from disk
+- **Status**: Instant access to all features
 
-# Adjust reranking threshold
-response = rag.ask(question, rerank_threshold=0.7)  # Stricter filtering
+**💡 Pro Tip**: The first run downloads ~35MB of models and data. This is a one-time process - all future runs are lightning fast!
+
+#### **🔍 What You'll See During Initialization**
+```
+🚀 Initializing PetBot systems...
+├── Downloading NER model (9 files) ✅
+├── Downloading MR model (11 files) ✅  
+├── Downloading pets database (11.8MB) ✅
+├── Loading FAISS index (23MB) ✅
+├── Processing 6,956 pet records ✅
+└── Initializing search components ✅
+
+Sidebar Status:
+├── RAG System: ✅ Ready (941 documents)
+└── Pet Search: ✅ Ready (6,956 pets)
 ```
 
-### Batch Processing
+### 4. **Test the System**
+```bash
+# Run integration tests
+python tests/test_unified_integration.py
 
+# Test multi-turn conversations
+python multi_turn_demo.py
+
+# Interactive chat mode
+python multi_turn_chat.py
+
+# Test specific components
+python -c "
+from rag_system.proposed_rag_system import ProposedRAGManager
+rag = ProposedRAGManager(collection_name='test', use_openai=False)
+rag.add_directory('documents')
+result = rag.ask('What can I feed my dog?')
+print(result['answer'])
+"
+```
+
+## 🎯 Usage Examples
+
+### **Pet Care Questions (RAG System)**
 ```python
-questions = ["Question 1", "Question 2", "Question 3"]
+from rag_system.proposed_rag_system import ProposedRAGManager
+
+# Initialize RAG system
+rag = ProposedRAGManager(collection_name="pet_care", use_openai=False)
+rag.add_directory("documents")
+
+# Ask pet care questions
+result = rag.ask("What can I feed my cat?")
+print(f"Answer: {result['answer']}")
+print(f"Confidence: {result['confidence']}")
+print(f"Sources: {len(result['sources'])} documents")
+```
+
+### **Pet Adoption Queries (Chatbot)**
+```python
+from chatbot_flow.chatbot_pipeline import ChatbotPipeline
+from rag_system.proposed_rag_system import ProposedRAGManager
+
+# Initialize chatbot with RAG integration
+rag = ProposedRAGManager(collection_name="pet_care", use_openai=False)
+rag.add_directory("documents")
+chatbot = ChatbotPipeline(rag)
+
+# Handle adoption queries
+response = chatbot.handle_message("I want to adopt a golden retriever puppy in Selangor")
+print(response)
+```
+
+### **Multi-Turn Conversations**
+```python
+from chatbot_flow.chatbot_pipeline import ChatbotPipeline
+from rag_system.proposed_rag_system import ProposedRAGManager
+
+# Initialize chatbot with RAG integration
+rag = ProposedRAGManager(collection_name="pet_care", use_openai=False)
+rag.add_directory("documents")
+chatbot = ChatbotPipeline(rag)
+
+# Multi-turn conversation example
 responses = []
+responses.append(chatbot.handle_message("I want to adopt a pet"))
+responses.append(chatbot.handle_message("I prefer dogs"))
+responses.append(chatbot.handle_message("Golden retrievers are nice"))
+responses.append(chatbot.handle_message("I live in Selangor"))
 
-for question in questions:
-    response = rag.ask(question)
-    responses.append(response)
+for i, response in enumerate(responses, 1):
+    print(f"Turn {i}: {response}")
 ```
 
-## 🐛 Troubleshooting
+### **Intent Classification & Entity Extraction**
+```python
+from chatbot_flow.intent_classifier import IntentClassifier
+from chatbot_flow.entity_extractor import EntityExtractor
 
-### Common Issues
+# Intent classification
+intent_classifier = IntentClassifier()
+intent = intent_classifier.predict("I want to adopt a dog")
+print(f"Intent: {intent[0]} (confidence: {intent[1]:.2f})")
 
-1. **Cross-encoder not loading**
-   - Install sentence-transformers: `pip install sentence-transformers`
-   - System will fall back to mock reranking
+# Entity extraction
+entity_extractor = EntityExtractor()
+entities = entity_extractor.extract("I want a golden retriever puppy in Selangor")
+print(f"Entities: {entities}")
+```
 
-2. **BM25 indexing errors**
-   - Install NLTK: `pip install nltk`
-   - System will use simple tokenization as fallback
+## 💬 Multi-Turn Conversation Features
 
-3. **Memory issues**
-   - Reduce max_rerank parameter
-   - Use smaller batch sizes for processing
+### **🎭 Conversation Capabilities**
+- **Session State Management**: Maintains conversation context across multiple turns
+- **Entity Accumulation**: Builds up pet preferences progressively (breed → location → age)
+- **Intent Persistence**: Remembers user's primary goal throughout conversation
+- **Context-Aware Responses**: References previous conversation elements
+- **Smart Intent Switching**: Seamlessly transitions between adoption and care topics
 
-### Performance Issues
+### **📝 Example Multi-Turn Flow**
+```
+👤 User: "I want to adopt a pet"
+🤖 Bot: "Which state or area are you in?"
 
-1. **Slow response times**
-   - Disable reranking for faster responses
-   - Reduce max_rerank parameter
-   - Use GPU acceleration if available
+👤 User: "I prefer dogs" 
+🤖 Bot: "Which state or area are you in?"
+📊 State: Intent=find_pet, Entities={'PET_TYPE': 'dog'}
 
-2. **Low confidence scores**
-   - Lower rerank_threshold
-   - Check document quality and relevance
-   - Ensure proper document ingestion
+👤 User: "Golden retrievers are nice"
+🤖 Bot: "Added breed: Golden Retriever. Which state or area are you in?"
+📊 State: Intent=find_pet, Entities={'PET_TYPE': 'dog', 'BREED': 'Golden Retriever'}
 
-## 📚 Technical Details
+👤 User: "I live in Selangor"
+🤖 Bot: "Got it! Searching for Golden Retriever dog in Selangor..."
+📊 State: Intent=find_pet, Entities={'PET_TYPE': 'dog', 'BREED': 'Golden Retriever', 'STATE': 'Selangor'}
+```
 
-### BM25 Algorithm
-- Uses TF-IDF weighting with length normalization
-- Handles exact keyword matching
-- Fast retrieval for specific terms
+### **🚀 Testing Multi-Turn Features**
+```bash
+# Automated demo scenarios
+python multi_turn_demo.py
 
-### RRF Fusion
-- Combines rankings from multiple retrievers
-- Formula: `score = 1 / (k + rank)`
-- Balances different retrieval methods
+# Interactive chat mode
+python multi_turn_chat.py
 
-### Cross-encoder Reranking
-- Uses cross-attention between query and document
-- MiniLM model for efficiency
-- Significant precision improvement
+# Test specific conversation flows
+python -c "
+from chatbot_flow.chatbot_pipeline import ChatbotPipeline
+from rag_system.proposed_rag_system import ProposedRAGManager
 
-### Extractive Generation
-- Sentence-level relevance scoring
-- Source attribution and citations
-- Confidence calculation based on multiple factors
+rag = ProposedRAGManager('test', use_openai=False)
+rag.add_directory('documents')
+chatbot = ChatbotPipeline(rag)
 
-## 🎉 Conclusion
+# Test multi-turn conversation
+print(chatbot.handle_message('I want to adopt a dog'))
+print(chatbot.handle_message('Golden retrievers'))
+print(chatbot.handle_message('In Selangor'))
+"
+```
 
-The proposed RAG system successfully implements the advanced configuration with:
+## ⚙️ Configuration
 
-- ✅ **17% improvement in precision**
-- ✅ **75% reduction in costs**
-- ✅ **42% better citation quality**
-- ✅ **67% faster response times**
-- ✅ **Zero hallucination risk**
+### **RAG System Parameters**
+```python
+# Custom configuration
+rag = ProposedRAGManager(
+    collection_name="custom_collection",
+    use_openai=False,
+    chunk_size=1000,
+    chunk_overlap=200
+)
 
-This makes it ideal for production pet care applications where accuracy, cost-efficiency, and source attribution are critical.
+# Query with custom parameters
+result = rag.ask(
+    "What vaccines does my kitten need?",
+    use_reranking=True,
+    rerank_threshold=0.1,
+    max_rerank=20
+)
+```
 
-## 📞 Support
+### **Azure Configuration**
+For Azure integration, create `.streamlit/secrets.toml`:
+```toml
+[azure]
+connection_string = "your_azure_connection_string"
+ml_container = "ml-artifacts"
+pets_container = "pets-data"
+```
 
-For questions or issues:
-1. Check the troubleshooting section
-2. Review the implementation guide
-3. Run the test script to validate setup
-4. Check system logs for detailed error information
+See `AZURE_SETUP.md` for detailed Azure configuration instructions.
+
+## 🧪 Testing & Validation
+
+### **Integration Tests**
+```bash
+# Run comprehensive integration tests
+python tests/test_unified_integration.py
+```
+
+### **Component Testing**
+```bash
+# Test RAG system only
+python -c "
+from rag_system.proposed_rag_system import ProposedRAGManager
+rag = ProposedRAGManager('test')
+rag.add_directory('documents')
+print('RAG system working!')
+"
+
+# Test chatbot components
+python -c "
+from chatbot_flow.intent_classifier import IntentClassifier
+from chatbot_flow.entity_extractor import EntityExtractor
+print('Chatbot components working!')
+"
+```
+
+## 📊 Performance Metrics
+
+### **RAG System Performance**
+- **Document Processing**: 941 chunks from 46 documents
+- **Query Response Time**: ~2 seconds average
+- **Retrieval Accuracy**: High relevance with cross-encoder reranking
+- **Confidence Scoring**: 0.9+ for well-matched queries
+- **Multi-Turn Support**: ✅ Session state maintained across conversations
+
+### **Pet Search Performance** ⚡ **OPTIMIZED**
+- **Initialization Time**: 5.25s (one-time at app startup)
+- **Search Response Time**: <1 second (instant after initialization)
+- **Caching**: 5-minute result caching for repeated queries
+- **Database Size**: 6,956 pets with 401 breeds
+- **Search Methods**: BM25 + FAISS + NER entity extraction
+- **Performance Improvement**: **6x faster** than previous version
+
+### **Chatbot Performance**
+- **Intent Classification**: 98.6% accuracy on test queries
+- **Entity Extraction**: Precise extraction of pet attributes
+- **Response Quality**: Context-aware, helpful responses
+- **Multi-Turn Capability**: ✅ Entity accumulation and context preservation
+- **Conversation Flow**: Smooth transitions between adoption and care topics
+
+### **System Optimization Features** 🚀
+- **Pre-loading**: All components loaded once at startup
+- **Smart Caching**: Streamlit caching for instant repeated searches
+- **Hybrid Search**: Combines text (BM25) and semantic (FAISS) search
+- **Entity Processing**: Optimized NER with query length limiting
+- **Memory Efficiency**: Components cached in memory for instant access
+
+## 🚀 Recent Optimizations (Latest Update)
+
+### **Performance Improvements**
+- **⚡ 6x Faster Pet Search**: Reduced from 6+ seconds to <1 second
+- **🔄 Pre-loading**: All components loaded once at app startup
+- **💾 Smart Caching**: Search results cached for 5 minutes
+- **🧠 Memory Optimization**: Components stay in memory for instant access
+- **⚙️ BM25 Fix**: Proper initialization for faster text search
+- **🎯 NER Optimization**: Limited query processing for speed
+
+### **User Experience Enhancements**
+- **⏳ Loading Indicator**: "🚀 Initializing PetBot systems..." during startup
+- **📊 Real-time Status**: Live system status in sidebar
+- **🔄 Instant Searches**: No waiting after initial load
+- **💬 Seamless Chat**: Unified interface with intent classification
+- **🎨 Better UI**: Improved layout and user feedback
+
+### **Technical Improvements**
+- **🔧 Fixed Azure Integration**: Proper function calls and error handling
+- **📁 Organized Structure**: Clean folder organization with proper imports
+- **🧪 Enhanced Testing**: Comprehensive integration tests
+- **📚 Updated Documentation**: Complete setup and usage guides
+- **🔒 Security**: Proper API key management and environment variables
+
+## 🛠️ Troubleshooting
+
+### **Common Issues**
+
+1. **App Stuck on "Initializing PetBot systems..."**
+   ```bash
+   # This is normal for first run - wait 2-3 minutes
+   # Check terminal for download progress
+   # Look for "✅ Pet search ready" in sidebar when complete
+   
+   # If stuck for >5 minutes, restart:
+   # Ctrl+C to stop, then restart the app
+   ```
+
+2. **Import Errors**
+   ```bash
+   # Ensure virtual environment is activated
+   source .venv/bin/activate
+   pip install -r requirements_stable.txt
+   ```
+
+3. **Model Loading Issues**
+   ```bash
+   # Clear model cache and reinstall
+   pip uninstall transformers sentence-transformers
+   pip install transformers sentence-transformers
+   ```
+
+3. **ChromaDB Issues**
+   ```bash
+   # Reset vector database
+   rm -rf chroma_db/
+   # Re-run ingestion
+   ```
+
+4. **API Key Issues**
+   ```bash
+   # Check API keys are set
+   echo $GROQ_API_KEY
+   echo $DEEPSEEK_API_KEY
+   ```
+
+### **Dependency Issues**
+- **NumPy Compatibility**: Use `numpy<2` for compatibility
+- **LangChain Warnings**: Update to `langchain-community` imports
+- **Transformers**: Ensure `huggingface_hub==0.19.4` compatibility
+
+## 🔧 Development
+
+### **Adding New Document Types**
+1. Update `document_processor.py` with new file type support
+2. Add processing logic in `load_document()` method
+3. Test with sample files
+
+### **Extending Chatbot Capabilities**
+1. Add new intents in `intent_classifier.py`
+2. Update entity types in `entity_extractor.py`
+3. Add response templates in `responses.py`
+
+### **Customizing RAG Parameters**
+1. Modify `config.py` for global settings
+2. Pass parameters to `ProposedRAGManager`
+3. Adjust reranking thresholds as needed
+
+## 📈 Future Enhancements
+
+- [x] **Multi-Turn Conversations**: ✅ Implemented with session state management
+- [x] **Entity Accumulation**: ✅ Progressive building of pet preferences
+- [x] **Intent Switching**: ✅ Seamless transitions between adoption and care
+- [ ] **Multi-language Support**: Extend to support multiple languages
+- [ ] **Voice Interface**: Add speech-to-text and text-to-speech
+- [ ] **Mobile App**: React Native mobile application
+- [ ] **Advanced Analytics**: User interaction tracking and insights
+- [ ] **Pet Health Monitoring**: Integration with health tracking devices
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Submit a pull request
+
+## 📜 License
+
+This project is provided as-is for educational and practical use cases in pet care and adoption assistance.
+
+## 🙏 Acknowledgments
+
+- **RAG System**: Built on LangChain, ChromaDB, and Sentence Transformers
+- **Chatbot Components**: Integrated from pet adoption chatbot project
+- **Azure Integration**: Cloud services integration for scalable deployment
+- **Documentation**: Comprehensive guides for easy setup and usage
 
 ---
 
-**🐾 Built with ❤️ for better pet care information retrieval**
+**🐾 Built with ❤️ for pet lovers and their furry friends.**
+
+*For detailed setup instructions, see `AZURE_SETUP.md` and `PROJECT_ORGANIZATION.md`*
