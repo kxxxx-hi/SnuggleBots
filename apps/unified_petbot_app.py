@@ -221,7 +221,8 @@ def perform_pet_search(query, _azure_components, topk=12):
         # Hybrid search: BM25 + embeddings
         bm25_results = bm25.search(only_text(query), topk=topk)
         bm25_scores = {idx: score for idx, score in bm25_results}
-        emb_scores = emb_search(query, student, doc_ids, doc_vecs, pool_topn=topk, faiss_index=faiss_index)
+        emb_results = emb_search(query, student, doc_ids, doc_vecs, pool_topn=topk, faiss_index=faiss_index)
+        emb_scores = {idx: score for idx, score in emb_results}
         
         # Combine scores
         combined_scores = {}
