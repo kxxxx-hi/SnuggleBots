@@ -219,7 +219,8 @@ def perform_pet_search(query, _azure_components, topk=12):
             return None, "No pets found matching your criteria. Try relaxing your search terms."
         
         # Hybrid search: BM25 + embeddings
-        bm25_scores = bm25.get_scores(only_text(query))
+        bm25_results = bm25.search(only_text(query), topk=topk)
+        bm25_scores = {idx: score for idx, score in bm25_results}
         emb_scores = emb_search(student, query, doc_ids, doc_vecs, faiss_index, topk=topk)
         
         # Combine scores

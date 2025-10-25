@@ -478,7 +478,17 @@ class ProposedRAGManager:
                 'retrieval_info': {}
             }
         
-        result = self.system.query(question, **kwargs)
+        try:
+            result = self.system.query(question, **kwargs)
+        except Exception as e:
+            return {
+                'answer': f'RAG system query error: {str(e)}',
+                'citations': [],
+                'confidence': 0.0,
+                'sources': [],
+                'performance': {},
+                'retrieval_info': {}
+            }
         
         return {
             'answer': result.answer,
