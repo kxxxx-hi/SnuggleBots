@@ -142,6 +142,10 @@ class ChatbotPipeline:
             print(f"RAG Debug - Confidence: {confidence}")
             print(f"RAG Debug - Full result: {result}")
             
+            # If answer is empty or generic, try to provide a better response
+            if not answer or answer == "Sorry, I couldn't find information about that.":
+                return self._provide_fallback_pet_care_answer(user_input)
+            
             # Add confidence indicator if low
             if confidence < 0.7:
                 return f"🐾 {answer}\n\n*Note: This answer has lower confidence. Please consult your veterinarian for specific medical advice.*"
@@ -165,7 +169,32 @@ class ChatbotPipeline:
                 return "🐾 Exercise recommendations:\n• Dogs: Daily walks and playtime\n• Cats: Interactive toys and climbing structures\n• Adjust activity level to your pet's age and health\n• Always supervise outdoor activities"
             
             else:
-                return f"🐾 I'd love to help with pet care questions! However, I encountered an error: {str(e)}. For specific medical concerns, please consult your veterinarian."
+                return self._provide_fallback_pet_care_answer(user_input)
+    
+    def _provide_fallback_pet_care_answer(self, user_input: str) -> str:
+        """Provide fallback pet care answers when RAG system fails"""
+        lower_input = user_input.lower()
+        
+        if any(word in lower_input for word in ['feed', 'food', 'eating', 'diet', 'nutrition']):
+            return "🐾 **Feeding Your Pet:**\n\n• **Puppies/Kittens**: Feed 3-4 times daily with high-quality puppy/kitten food\n• **Adult pets**: Feed 2 times daily with age-appropriate food\n• **Fresh water** should always be available\n• **Avoid human foods** like chocolate, onions, grapes, and avocado\n• **Consult your vet** for specific dietary needs and portion sizes\n\n*For personalized feeding advice, please consult your veterinarian.*"
+        
+        elif any(word in lower_input for word in ['vaccine', 'vaccination', 'shots', 'immunization']):
+            return "🐾 **Vaccination Schedule:**\n\n• **Puppies**: Start at 6-8 weeks, then every 3-4 weeks until 16 weeks old\n• **Kittens**: Start at 6-8 weeks, then every 3-4 weeks until 16 weeks old\n• **Adult pets**: Annual booster vaccinations\n• **Core vaccines**: Rabies, DHPP (dogs), FVRCP (cats)\n• **Always consult your veterinarian** for the best vaccination schedule\n\n*Vaccination requirements may vary by location and pet health.*"
+        
+        elif any(word in lower_input for word in ['groom', 'bath', 'clean', 'hygiene']):
+            return "🐾 **Grooming Tips:**\n\n• **Brushing**: Regular brushing prevents matting and reduces shedding\n• **Bathing**: Monthly or as needed (use pet-safe shampoo)\n• **Nail trimming**: Trim nails carefully to avoid cutting the quick\n• **Ear cleaning**: Clean ears regularly with vet-approved solution\n• **Dental care**: Brush teeth daily with pet toothpaste\n• **Use only pet-safe products** for grooming\n\n*Regular grooming keeps your pet healthy and comfortable.*"
+        
+        elif any(word in lower_input for word in ['exercise', 'walk', 'play', 'activity']):
+            return "🐾 **Exercise & Play:**\n\n• **Dogs**: Daily walks and active playtime (30-60 minutes)\n• **Cats**: Interactive toys, climbing structures, and play sessions\n• **Adjust activity** to your pet's age, breed, and health\n• **Mental stimulation**: Puzzle toys and training exercises\n• **Always supervise** outdoor activities\n• **Weather considerations**: Avoid extreme heat or cold\n\n*Regular exercise keeps pets physically and mentally healthy.*"
+        
+        elif any(word in lower_input for word in ['train', 'training', 'behavior', 'obedience']):
+            return "🐾 **Training Tips:**\n\n• **Start early**: Begin training as soon as you bring your pet home\n• **Positive reinforcement**: Reward good behavior with treats and praise\n• **Consistency**: Use the same commands and rules consistently\n• **Patience**: Training takes time and repetition\n• **Socialization**: Expose pets to different people, animals, and environments\n• **Professional help**: Consider obedience classes for complex issues\n\n*Training strengthens the bond between you and your pet.*"
+        
+        elif any(word in lower_input for word in ['health', 'sick', 'illness', 'symptoms']):
+            return "🐾 **Pet Health Signs:**\n\n• **Watch for changes**: Appetite, energy level, behavior, or bathroom habits\n• **Common signs**: Lethargy, loss of appetite, vomiting, diarrhea, coughing\n• **Emergency signs**: Difficulty breathing, severe pain, unconsciousness\n• **Regular checkups**: Annual vet visits for preventive care\n• **Immediate vet care**: For any concerning symptoms\n\n*Always consult your veterinarian for health concerns.*"
+        
+        else:
+            return "🐾 I'd love to help with pet care questions! For specific medical concerns, feeding advice, grooming tips, or training help, please consult your veterinarian. They can provide personalized guidance based on your pet's individual needs."
 
     # -----------------------------------------------------------------------
     # FIND-PET HANDLER
@@ -405,13 +434,32 @@ class ChatbotPipeline:
                 results, error = self.pet_search_func(search_query, self.azure_components)
                 
                 if results is not None and len(results) > 0:
-                    # Format the results
+                    # Format the results with photos
                     result_text = f"Found {len(results)} pets matching your criteria:\n\n"
                     for i, (_, pet) in enumerate(results.head(5).iterrows(), 1):
                         result_text += f"**{i}. {pet.get('name', 'Unnamed')}**\n"
                         result_text += f"   - {pet.get('animal', 'Unknown')} ({pet.get('breed', 'Mixed breed')})\n"
                         result_text += f"   - {pet.get('gender', 'Unknown')}, {pet.get('age_months', 'Unknown')} months old\n"
                         result_text += f"   - {pet.get('state', 'Unknown location')}\n"
+                        
+                        # Add photo if available
+                        photo_links = pet.get('photo_links', '')
+                        if photo_links and photo_links != '':
+                            try:
+                                import ast
+                                if isinstance(photo_links, str):
+                                    photos = ast.literal_eval(photo_links)
+                                else:
+                                    photos = photo_links
+                                
+                                if photos and len(photos) > 0:
+                                    # Take the first photo
+                                    first_photo = photos[0]
+                                    result_text += f"   - 📸 [View Photo]({first_photo})\n"
+                            except:
+                                # If parsing fails, skip photo
+                                pass
+                        
                         if pet.get('description_clean'):
                             desc_short = pet['description_clean'][:100] + "..." if len(pet['description_clean']) > 100 else pet['description_clean']
                             result_text += f"   - {desc_short}\n"
