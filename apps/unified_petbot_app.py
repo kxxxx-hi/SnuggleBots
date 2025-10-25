@@ -140,7 +140,8 @@ def bootstrap_azure_components():
         return ner, student, doc_ids, doc_vecs, faiss_index, dfp, bm25, breed_catalog, breed_to_animal
         
     except Exception as e:
-        st.error(f"Failed to initialize Azure components: {str(e)}")
+        st.warning(f"Azure components not available: {str(e)}")
+        st.info("Pet search functionality will be limited. Please configure Azure credentials in Streamlit secrets for full functionality.")
         return None, None, None, None, None, None, None, None, None
 
 # -------------------------------------------
