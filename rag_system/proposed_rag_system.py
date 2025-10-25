@@ -441,7 +441,12 @@ class ProposedRAGManager:
     """High-level manager for the proposed RAG system"""
     
     def __init__(self, collection_name: str = "proposed_rag_documents", use_openai: bool = True):
-        self.system = ProposedRAGSystem(collection_name, use_openai)
+        try:
+            self.system = ProposedRAGSystem(collection_name, use_openai)
+            logger.info(f"ProposedRAGManager initialized with system type: {type(self.system)}")
+        except Exception as e:
+            logger.error(f"Failed to initialize ProposedRAGSystem: {str(e)}")
+            self.system = None
     
     def add_documents(self, file_paths: List[str]) -> Dict[str, Any]:
         """Add documents to the system"""
@@ -453,6 +458,26 @@ class ProposedRAGManager:
     
     def ask(self, question: str, **kwargs) -> Dict[str, Any]:
         """Ask a question to the system"""
+        if self.system is None:
+            return {
+                'answer': 'RAG system not initialized properly.',
+                'citations': [],
+                'confidence': 0.0,
+                'sources': [],
+                'performance': {},
+                'retrieval_info': {}
+            }
+        
+        if not hasattr(self.system, 'query'):
+            return {
+                'answer': f'RAG system error: system object has no query method. Type: {type(self.system)}',
+                'citations': [],
+                'confidence': 0.0,
+                'sources': [],
+                'performance': {},
+                'retrieval_info': {}
+            }
+        
         result = self.system.query(question, **kwargs)
         
         return {
