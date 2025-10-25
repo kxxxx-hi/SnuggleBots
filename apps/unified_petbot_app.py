@@ -235,8 +235,15 @@ def perform_pet_search(query, _azure_components, topk=12):
         sorted_indices = sorted(combined_scores.items(), key=lambda x: x[1], reverse=True)
         top_indices = [idx for idx, _ in sorted_indices[:topk]]
         
-        # Get results
-        results = df_filtered.iloc[top_indices] if len(top_indices) > 0 else df_filtered.head(topk)
+        # Filter indices to only include those that exist in the filtered DataFrame
+        valid_indices = [idx for idx in top_indices if idx in df_filtered.index]
+        
+        # Get results - use valid indices if available, otherwise take first few rows
+        if len(valid_indices) > 0:
+            results = df_filtered.loc[valid_indices]
+        else:
+            # Fallback: take first few rows from filtered DataFrame
+            results = df_filtered.head(topk)
         
         return results, None
         
