@@ -289,6 +289,11 @@ def main():
         
         # Load Azure components
         azure_components = bootstrap_azure_components()
+        
+        # Update chatbot with pet search functionality
+        if chatbot is not None:
+            chatbot.pet_search_func = perform_pet_search
+            chatbot.azure_components = azure_components
 
     # Display system status
     with st.sidebar:

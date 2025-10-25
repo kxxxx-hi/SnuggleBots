@@ -44,10 +44,12 @@ def autocorrect_text(text, known_words=None, threshold=80):
 class ChatbotPipeline:
     """End-to-end pet adoption chatbot with clean fallbacks and context."""
 
-    def __init__(self, rag_system=None):
+    def __init__(self, rag_system=None, pet_search_func=None, azure_components=None):
         self.intent_clf = IntentClassifier()
         self.ner_extractor = EntityExtractor()
         self.rag_system = rag_system  # Will be None for now
+        self.pet_search_func = pet_search_func  # Function to perform pet search
+        self.azure_components = azure_components  # Azure components for pet search
         self.session = {"intent": None, "entities": {}, "greeted": False}
 
     # -----------------------------------------------------------------------
@@ -372,7 +374,54 @@ class ChatbotPipeline:
         desc = " ".join(details + [pet])
         if not ents.get("BREED"):
             desc += "s"
-        return f"Got it! Searching for {desc} in {state}..."
+        
+        # Actually perform the pet search if we have the function
+        if self.pet_search_func and self.azure_components:
+            try:
+                # Build search query from entities
+                query_parts = []
+                if ents.get("BREED"):
+                    query_parts.append(ents["BREED"])
+                if ents.get("PET_TYPE"):
+                    query_parts.append(ents["PET_TYPE"])
+                if ents.get("COLOR"):
+                    query_parts.append(ents["COLOR"])
+                if ents.get("SIZE"):
+                    query_parts.append(ents["SIZE"])
+                if ents.get("GENDER"):
+                    query_parts.append(ents["GENDER"])
+                if ents.get("STATE"):
+                    query_parts.append(ents["STATE"])
+                
+                search_query = " ".join(query_parts)
+                
+                # Perform the search
+                results, error = self.pet_search_func(search_query, self.azure_components)
+                
+                if results is not None and len(results) > 0:
+                    # Format the results
+                    result_text = f"Found {len(results)} pets matching your criteria:\n\n"
+                    for i, (_, pet) in enumerate(results.head(5).iterrows(), 1):
+                        result_text += f"**{i}. {pet.get('name', 'Unnamed')}**\n"
+                        result_text += f"   - {pet.get('animal', 'Unknown')} ({pet.get('breed', 'Mixed breed')})\n"
+                        result_text += f"   - {pet.get('gender', 'Unknown')}, {pet.get('age_months', 'Unknown')} months old\n"
+                        result_text += f"   - {pet.get('state', 'Unknown location')}\n"
+                        if pet.get('description_clean'):
+                            desc_short = pet['description_clean'][:100] + "..." if len(pet['description_clean']) > 100 else pet['description_clean']
+                            result_text += f"   - {desc_short}\n"
+                        result_text += "\n"
+                    
+                    if len(results) > 5:
+                        result_text += f"... and {len(results) - 5} more pets available!\n"
+                    
+                    return result_text
+                else:
+                    return f"Sorry, I couldn't find any pets matching your criteria. {error or 'Try adjusting your search terms.'}"
+                    
+            except Exception as e:
+                return f"Got it! Searching for {desc} in {state}... (Search temporarily unavailable: {str(e)})"
+        else:
+            return f"Got it! Searching for {desc} in {state}..."
 
     # -----------------------------------------------------------------------
     # HELPERS
