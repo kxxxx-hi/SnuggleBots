@@ -136,6 +136,12 @@ class ChatbotPipeline:
             answer = result.get('answer', 'Sorry, I couldn\'t find information about that.')
             confidence = result.get('confidence', 0)
             
+            # Debug: Log the result
+            print(f"RAG Debug - Query: {user_input}")
+            print(f"RAG Debug - Answer: {answer}")
+            print(f"RAG Debug - Confidence: {confidence}")
+            print(f"RAG Debug - Full result: {result}")
+            
             # Add confidence indicator if low
             if confidence < 0.7:
                 return f"🐾 {answer}\n\n*Note: This answer has lower confidence. Please consult your veterinarian for specific medical advice.*"

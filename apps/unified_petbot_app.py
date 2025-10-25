@@ -97,7 +97,11 @@ def bootstrap_rag_system():
         # Load documents
         documents_dir = os.path.join(project_root, "documents")
         if os.path.exists(documents_dir):
-            rag.add_directory(documents_dir)
+            st.info(f"Loading documents from: {documents_dir}")
+            result = rag.add_directory(documents_dir)
+            st.info(f"Documents loaded: {result}")
+        else:
+            st.warning(f"Documents directory not found: {documents_dir}")
         
         # Initialize chatbot pipeline with RAG
         chatbot = ChatbotPipeline(rag)
@@ -148,12 +152,12 @@ def bootstrap_azure_components():
 # PET SEARCH FUNCTIONS
 # -------------------------------------------
 @st.cache_data(ttl=300)  # Cache search results for 5 minutes
-def perform_pet_search(query, azure_components, topk=12):
+def perform_pet_search(query, _azure_components, topk=12):
     """Perform pet search using Azure components - OPTIMIZED with caching"""
-    if azure_components[0] is None:
+    if _azure_components[0] is None:
         return None, "Pet search not available"
     
-    ner, student, doc_ids, doc_vecs, faiss_index, dfp, bm25, breed_catalog, breed_to_animal = azure_components
+    ner, student, doc_ids, doc_vecs, faiss_index, dfp, bm25, breed_catalog, breed_to_animal = _azure_components
     
     try:
         # Process query - limit NER processing for speed
