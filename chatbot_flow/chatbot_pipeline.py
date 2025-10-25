@@ -442,7 +442,7 @@ class ChatbotPipeline:
                         result_text += f"   - {pet.get('gender', 'Unknown')}, {pet.get('age_months', 'Unknown')} months old\n"
                         result_text += f"   - {pet.get('state', 'Unknown location')}\n"
                         
-                        # Add photo if available
+                        # Store photo URL for later display
                         photo_links = pet.get('photo_links', '')
                         if photo_links and photo_links != '':
                             try:
@@ -453,7 +453,7 @@ class ChatbotPipeline:
                                     photos = photo_links
                                 
                                 if photos and len(photos) > 0:
-                                    # Take the first photo
+                                    # Take the first photo and store it for display
                                     first_photo = photos[0]
                                     result_text += f"   - 📸 [View Photo]({first_photo})\n"
                             except:

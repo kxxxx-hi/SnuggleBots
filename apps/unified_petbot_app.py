@@ -250,6 +250,43 @@ def perform_pet_search(query, _azure_components, topk=12):
     except Exception as e:
         return None, f"Search error: {str(e)}"
 
+def display_pet_search_results_with_photos(response_text, azure_components):
+    """Display pet search results with inline photos"""
+    if azure_components[0] is None:
+        st.markdown(response_text)
+        return
+    
+    try:
+        # Parse the response to extract photo URLs
+        import re
+        
+        # Split the response into lines
+        lines = response_text.split('\n')
+        
+        for line in lines:
+            if line.strip().startswith('**') and '**' in line:
+                # This is a pet name line
+                st.markdown(line)
+            elif '📸 [View Photo]' in line:
+                # Extract photo URL from the line
+                photo_match = re.search(r'\[View Photo\]\((https?://[^)]+)\)', line)
+                if photo_match:
+                    photo_url = photo_match.group(1)
+                    try:
+                        # Display the image directly
+                        st.image(photo_url, width=200, caption="Pet Photo")
+                    except Exception as img_error:
+                        # If image fails to load, show the link
+                        st.markdown(f"📸 [View Photo]({photo_url})")
+                else:
+                    st.markdown(line)
+            else:
+                st.markdown(line)
+        
+    except Exception as e:
+        st.markdown(response_text)
+        st.warning(f"Could not display photos: {str(e)}")
+
 def display_pet_results(results, error_msg=None):
     """Display pet search results"""
     if error_msg:
@@ -380,7 +417,15 @@ def main():
             with st.spinner("Analyzing your request..."):
                 try:
                     response = chatbot.handle_message(prompt)
-                    st.markdown(response)
+                    
+                    # Check if this is a pet search result with photos
+                    if "Found" in response and "pets matching your criteria" in response:
+                        # Parse and display pet results with images
+                        display_pet_search_results_with_photos(response, azure_components)
+                    else:
+                        # Regular text response
+                        st.markdown(response)
+                    
                     st.session_state.messages.append({"role": "assistant", "content": response})
                 except Exception as e:
                     error_msg = f"Sorry, I encountered an error: {str(e)}"
