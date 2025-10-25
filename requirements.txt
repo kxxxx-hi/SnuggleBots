@@ -40,3 +40,4 @@ azure-core==1.29.5
 python-dotenv==1.0.0
 tqdm==4.66.1
 beautifulsoup4==4.12.2
+markdown==3.5.1
