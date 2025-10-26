@@ -1452,7 +1452,8 @@ def main():
             if removal_intent:
                 prev_after_removal, _, cleared_all, removed_keys = apply_constraint_removals(prev_facets_for_removal, prompt)
                 ensure_bot_session(bot)
-                bot.session["intent"] = "find_pet"
+                if bot is not None:
+                    bot.session["intent"] = "find_pet"
                 blocked = get_blocked_facets()
                 if cleared_all:
                     blocked = {"animal","breed","gender","state","color","size","fur_length","soft"}
@@ -1465,6 +1466,21 @@ def main():
                 reply = f"(Chat pipeline error: {e})"
 
             ensure_bot_session(bot)
+            
+            # Handle case where bot initialization failed
+            if bot is None:
+                reply = "Sorry, the chatbot is not available. Please try refreshing the page or contact support."
+                assistant_anchor_id = f"assistant_msg_{len(st.session_state.messages)}"
+                st.markdown(f"<div id='{assistant_anchor_id}'></div>", unsafe_allow_html=True)
+                st.markdown(reply)
+                st.session_state.messages.append({"role": "assistant", "content": reply})
+                st.session_state.clicked_buttons.clear()
+                st.session_state.processing = False
+                st.divider()
+                if st.button("➕ New search / Clear history", type="primary", use_container_width=True, key="bottom_clear_bot_none"):
+                    trigger_hard_reset()
+                return
+            
             intent_now = bot.session.get("intent")
             if removal_intent:
                 intent_now = "find_pet"

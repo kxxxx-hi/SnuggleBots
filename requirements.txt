@@ -1,45 +1,42 @@
-openai==1.6.1
+# Stable Requirements for PetBot - Optimized for Performance
+# This ensures compatibility and avoids dependency hell
 
-# Vector DB & embeddings
-chromadb==0.4.22
-sentence-transformers==2.7.0
-faiss-cpu==1.9.0.post1
-
-# Document processing
-pypdf2==3.0.1
-python-docx==1.1.0
-beautifulsoup4==4.12.2
-markdown==3.5.1
-rank-bm25==0.2.2
-nltk==3.8.1
-
-# Web interface
-streamlit==1.29.0
-gradio==4.8.0
-
-# Utilities
-python-dotenv==1.0.0
-tiktoken>=0.6.0
+# Core ML and NLP
 numpy>=1.25.0,<3.0
-pandas>=2.1.0
+scikit-learn==1.4.2
+sentence-transformers==5.1.1
+transformers==4.57.1
+torch==2.1.2
+huggingface-hub==0.19.4
 
-# Machine Learning & NLP
-scikit-learn>=1.4.0
-transformers==4.36.2
-huggingface_hub==0.19.4
-torch==2.9.0
-accelerate==0.25.0
-rapidfuzz==3.14.1
+# Text processing
+nltk==3.8.1
+rapidfuzz==3.6.1
+joblib==1.3.2
+
+# RAG and Vector Search
+chromadb==0.4.22
+rank-bm25==0.2.2
+faiss-cpu==1.9.0.post1
 
 # LangChain dependencies
 langchain>=0.1.0
 langchain-community>=0.0.20
 langchain-core>=0.1.0
-joblib==1.5.2
+
+# LLM Integration
+requests==2.31.0
+openai==1.12.0
+
+# Web Framework
+streamlit==1.28.1
 
 # Azure Integration
 azure-storage-blob==12.19.1
 azure-identity==1.15.0
 azure-core==1.29.5
 
-# Optional: for advanced features
+# Utilities
+python-dotenv==1.0.0
+tqdm==4.66.1
+tiktoken>=0.6.0
