@@ -26,6 +26,8 @@ st.markdown("""
 .main .block-container {
     padding-bottom: 120px !important; /* Extra padding for mobile browser UI */
     padding-top: 2rem !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
 }
 
 /* Ensure chat input is accessible on mobile */
@@ -51,12 +53,25 @@ h3 {
     font-size: 1.3rem !important;
 }
 
+/* Chat message spacing */
+.stChatMessage {
+    margin-left: 1rem !important;
+    margin-right: 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
 /* Add padding for mobile devices */
 @media (max-width: 768px) {
     .main .block-container {
         padding-bottom: 150px !important; /* Extra padding for mobile */
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+    }
+    
+    /* More spacing for chat messages on mobile */
+    .stChatMessage {
+        margin-left: 0.5rem !important;
+        margin-right: 0.5rem !important;
     }
     
     /* Reduce font sizes for mobile */

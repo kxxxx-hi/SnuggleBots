@@ -94,7 +94,7 @@ class FreeLLMGenerator:
         """Extract relevant context from documents"""
         context_parts = []
         
-        for doc in documents[:3]:  # Use top 3 documents
+        for doc in documents[:7]:  # Use top 7 documents (increased from 3 for better coverage)
             content = doc.get('content', '')
             source = doc.get('source', 'Unknown')
             
@@ -102,7 +102,8 @@ class FreeLLMGenerator:
             content = self._clean_content(content)
             
             if content and len(content) > 50:
-                context_parts.append(f"Source: {source}\nContent: {content[:1000]}...")
+                # Use more content per document for better context (1500 chars instead of 1000)
+                context_parts.append(f"Source: {source}\nContent: {content[:1500]}...")
         
         return "\n\n".join(context_parts)
     
@@ -250,13 +251,21 @@ class FreeLLMGenerator:
             sentences = context.split('.')
             relevant_sentences = []
             
+            # Extract key terms from question for better matching
+            question_words = set(word.lower() for word in question.lower().split() if len(word) > 3)
+            
             for sentence in sentences:
                 sentence = sentence.strip()
-                if len(sentence) > 20 and any(word in sentence.lower() for word in question.lower().split()):
-                    relevant_sentences.append(sentence)
+                if len(sentence) > 20:
+                    sentence_lower = sentence.lower()
+                    # Calculate relevance score based on keyword matches
+                    score = sum(1 for word in question_words if word in sentence_lower)
+                    if score > 0:
+                        relevant_sentences.append((score, sentence))
             
-            # Add up to 3 most relevant sentences
-            for sentence in relevant_sentences[:3]:
+            # Sort by relevance score and take top 5 (increased from 3)
+            relevant_sentences.sort(reverse=True, key=lambda x: x[0])
+            for score, sentence in relevant_sentences[:5]:
                 if sentence:
                     answer_parts.append(f"• {sentence}.")
         

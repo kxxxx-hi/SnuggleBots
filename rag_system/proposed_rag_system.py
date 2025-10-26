@@ -243,7 +243,7 @@ class ProposedRAGSystem:
                 reranked_results = self._rerank_documents(question, fused_results, 
                                                         rerank_threshold, max_rerank)
             else:
-                reranked_results = fused_results[:5]  # Take top 5 without reranking
+                reranked_results = fused_results[:10]  # Take top 10 without reranking (increased from 5)
             rerank_time = (time.time() - rerank_start) * 1000
             
             # Step 4: Extractive Answer Generation
@@ -301,11 +301,11 @@ class ProposedRAGSystem:
     def _hybrid_retrieval(self, question: str) -> tuple:
         """Perform hybrid retrieval using BM25 and dense search"""
         try:
-            # BM25 retrieval
-            bm25_results = self.bm25_retriever.search(question, k=20) if self.bm25_retriever else []
+            # BM25 retrieval (increased to 30 for better coverage)
+            bm25_results = self.bm25_retriever.search(question, k=30) if self.bm25_retriever else []
             
-            # Dense retrieval
-            dense_results = self.vector_manager.vector_store.vectorstore.similarity_search(question, k=20)
+            # Dense retrieval (increased to 30 for better coverage)
+            dense_results = self.vector_manager.vector_store.vectorstore.similarity_search(question, k=30)
             
             # Convert dense results to our format
             dense_formatted = []
