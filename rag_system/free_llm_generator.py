@@ -16,6 +16,15 @@ except ImportError:
     GROQ_API_KEY = None
     HUGGINGFACE_API_KEY = None
 
+# Also try to get from environment variables as fallback
+import os
+if not GROQ_API_KEY:
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+if not DEEPSEEK_API_KEY:
+    DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+if not HUGGINGFACE_API_KEY:
+    HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
+
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -33,6 +42,11 @@ class FreeLLMGenerator:
     def __init__(self, provider: str = "deepseek"):
         self.provider = provider.lower()
         self.api_key = self._get_api_key()
+        
+        logger.info(f"Initializing FreeLLMGenerator with provider: {provider}")
+        logger.info(f"API key found: {bool(self.api_key)}")
+        if self.api_key:
+            logger.info(f"API key length: {len(self.api_key)}")
         
         if not self.api_key:
             logger.warning(f"No API key found for {provider}, using basic generation")
@@ -88,7 +102,7 @@ class FreeLLMGenerator:
             content = self._clean_content(content)
             
             if content and len(content) > 50:
-                context_parts.append(f"Source: {source}\nContent: {content[:500]}...")
+                context_parts.append(f"Source: {source}\nContent: {content[:1000]}...")
         
         return "\n\n".join(context_parts)
     
@@ -110,7 +124,7 @@ class FreeLLMGenerator:
                     {"role": "system", "content": "You are a helpful veterinary assistant. Provide clear, accurate, and professional advice about pet care based on the given context."},
                     {"role": "user", "content": prompt}
                 ],
-                "max_tokens": 400,
+                "max_tokens": 1500,
                 "temperature": 0.3,
                 "stream": False
             }
@@ -130,7 +144,7 @@ class FreeLLMGenerator:
             return LLMAnswerResult(
                 answer=answer,
                 confidence=0.9,
-                sources_used=[{'source': doc.get('source', 'Unknown'), 'content': doc.get('content', '')[:100]} for doc in documents[:3]],
+                sources_used=[{'source': doc.get('source', 'Unknown'), 'content': doc.get('content', '')[:200]} for doc in documents[:3]],
                 generation_method="deepseek",
                 citations=[doc.get('source', 'Unknown') for doc in documents[:3]]
             )
@@ -156,7 +170,7 @@ class FreeLLMGenerator:
                     {"role": "system", "content": "You are a helpful veterinary assistant. Provide clear, accurate, and professional advice about pet care based on the given context."},
                     {"role": "user", "content": prompt}
                 ],
-                "max_tokens": 400,
+                "max_tokens": 1500,
                 "temperature": 0.3
             }
             
@@ -169,7 +183,7 @@ class FreeLLMGenerator:
             return LLMAnswerResult(
                 answer=answer,
                 confidence=0.9,
-                sources_used=[{'source': doc.get('source', 'Unknown'), 'content': doc.get('content', '')[:100]} for doc in documents[:3]],
+                sources_used=[{'source': doc.get('source', 'Unknown'), 'content': doc.get('content', '')[:200]} for doc in documents[:3]],
                 generation_method="groq",
                 citations=[doc.get('source', 'Unknown') for doc in documents[:3]]
             )
@@ -206,7 +220,7 @@ class FreeLLMGenerator:
             return LLMAnswerResult(
                 answer=answer,
                 confidence=0.8,
-                sources_used=[{'source': doc.get('source', 'Unknown'), 'content': doc.get('content', '')[:100]} for doc in documents[:3]],
+                sources_used=[{'source': doc.get('source', 'Unknown'), 'content': doc.get('content', '')[:200]} for doc in documents[:3]],
                 generation_method="huggingface",
                 citations=[doc.get('source', 'Unknown') for doc in documents[:3]]
             )

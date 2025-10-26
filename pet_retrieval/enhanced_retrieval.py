@@ -1,37 +1,55 @@
-# pet_retrieval/retrieval.py
+"""
+Enhanced Pet Retrieval System
+Incorporates robust filtering and data handling from friend's code
+"""
+
 import re, math, time, ast, json
 import numpy as np
 import pandas as pd
 from typing import List, Dict, Any, Tuple, Optional
 
-# ---------- text clean ----------
+# ---------- Text Cleaning ----------
 def only_text(s: str) -> str:
+    """Clean text by removing URLs and special characters"""
     s = re.sub(r"http\S+", " ", str(s or ""))
     s = re.sub(r"[^a-zA-Z0-9\s/,+()\-]", " ", s)
     return re.sub(r"\s+", " ", s).strip().lower()
 
-# ---------- tiny BM25 ----------
-class BM25:
+# ---------- Enhanced BM25 ----------
+class EnhancedBM25:
     def __init__(self, k1=1.5, b=0.75):
-        self.k1 = k1; self.b = b
-        self.docs=[]; self.ids=[]
-        self.df={}; self.idf={}
-        self.doc_lens=None; self.avgdl=0.0
-    def _tok(self, text): return re.findall(r"[a-z0-9]+", text.lower())
+        self.k1 = k1
+        self.b = b
+        self.docs = []
+        self.ids = []
+        self.df = {}
+        self.idf = {}
+        self.doc_lens = None
+        self.avgdl = 0.0
+
+    def _tok(self, text):
+        """Tokenize text"""
+        return re.findall(r"[a-z0-9]+", text.lower())
+
     def fit(self, doc_map: Dict[int, str]):
+        """Fit BM25 on document map"""
         self.ids = np.array(list(doc_map.keys()), dtype=int)
         self.docs = [self._tok(doc_map[i]) for i in self.ids]
         N = len(self.docs)
         self.doc_lens = np.array([len(d) for d in self.docs], dtype=float)
         self.avgdl = float(np.mean(self.doc_lens)) if N else 0.0
+        
         from collections import defaultdict
         df = defaultdict(int)
         for d in self.docs:
-            for t in set(d): df[t]+=1
+            for t in set(d):
+                df[t] += 1
         self.df = dict(df)
         self.idf = {t: math.log(1 + (N - df_t + 0.5)/(df_t + 0.5)) for t, df_t in self.df.items()}
         return self
+
     def search(self, query: str, topk=2000):
+        """Search with BM25 scoring"""
         q = self._tok(query)
         scores = np.zeros(len(self.docs), dtype=float)
         for i, d in enumerate(self.docs):
@@ -39,11 +57,14 @@ class BM25:
             tf = Counter(d)
             s = 0.0
             for t in q:
-                if t not in self.idf: continue
-                idf = self.idf[t]; f = tf.get(t, 0)
+                if t not in self.idf:
+                    continue
+                idf = self.idf[t]
+                f = tf.get(t, 0)
                 denom = f + self.k1*(1 - self.b + self.b*len(d)/(self.avgdl + 1e-9))
                 s += idf * (f*(self.k1+1))/(denom + 1e-9)
             scores[i] = s
+        
         if topk < len(scores):
             idx = np.argpartition(-scores, topk)[:topk]
             idx = idx[np.argsort(-scores[idx])]
@@ -51,48 +72,76 @@ class BM25:
             idx = np.argsort(-scores)[::-1]
         return [(int(self.ids[i]), float(scores[i])) for i in idx[:topk]]
 
-# ---------- NER light: parse ----------
+# ---------- Enhanced Facet Parsing ----------
 def parse_facets_from_text(user_text: str) -> Dict[str, Any]:
+    """Parse facets from user text using regex patterns"""
     t = only_text(user_text)
+    
+    # Animal detection
     animal = None
-    if re.search(r"\b(dog|puppy|canine)\b", t): animal = "dog"
-    if re.search(r"\b(cat|kitten|feline)\b", t): animal = "cat"
+    if re.search(r"\b(dog|puppy|canine)\b", t):
+        animal = "dog"
+    if re.search(r"\b(cat|kitten|feline)\b", t):
+        animal = "cat"
+    
+    # Gender detection
     gender = None
-    if re.search(r"\bmale\b", t): gender = "male"
-    elif re.search(r"\bfemale\b", t): gender = "female"
+    if re.search(r"\bmale\b", t):
+        gender = "male"
+    elif re.search(r"\bfemale\b", t):
+        gender = "female"
+    
+    # State detection
     state = None
-    # quick lookup for Malaysian states (extend as needed)
-    states = ["selangor","kuala lumpur","putrajaya","johor","penang","pahang","sabah","sarawak","perak","kedah","kelantan","melaka","negeri sembilan","perlis","terengganu","labuan"]
+    states = ["selangor", "kuala lumpur", "putrajaya", "johor", "penang", "pahang", 
+              "sabah", "sarawak", "perak", "kedah", "kelantan", "melaka", 
+              "negeri sembilan", "perlis", "terengganu", "labuan"]
     for s in states:
-        if re.search(rf"\b{s}\b", t): state = s; break
-    COLORS = ["black","white","brown","beige","tan","golden","cream","gray","grey","silver",
-              "orange","ginger","brindle","calico","tortoiseshell","tortie","tabby","yellow"]
+        if re.search(rf"\b{s}\b", t):
+            state = s
+            break
+    
+    # Color detection
+    COLORS = ["black", "white", "brown", "beige", "tan", "golden", "cream", "gray", "grey", 
+              "silver", "orange", "ginger", "brindle", "calico", "tortoiseshell", 
+              "tortie", "tabby", "yellow"]
     found = [c for c in COLORS if re.search(rf"\b{re.escape(c)}\b", t)]
-    colors_any = sorted(set(["gray" if c=="grey" else c for c in found])) if found else None
-    return {"animal": animal, "gender": gender, "colors_any": colors_any, "breed": None, "state": state}
+    colors_any = sorted(set(["gray" if c == "grey" else c for c in found])) if found else None
+    
+    return {
+        "animal": animal, 
+        "gender": gender, 
+        "colors_any": colors_any, 
+        "breed": None, 
+        "state": state
+    }
 
 def entity_spans_to_facets(spans: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Convert NER entity spans to facets"""
     facets = {"animal": None, "breed": None, "gender": None, "colors_any": [], "state": None}
     for sp in (spans or []):
         label = re.sub(r"^[BI]-", "", str(sp.get("entity_group") or sp.get("label") or "")).upper()
-        text  = only_text(sp.get("word") or sp.get("entity") or "")
+        text = only_text(sp.get("word") or sp.get("entity") or "")
         if not label or not text:
             continue
-        if label == "ANIMAL" and text in {"dog","cat"}:
+        
+        if label == "ANIMAL" and text in {"dog", "cat"}:
             facets["animal"] = text
         elif label == "BREED":
             facets["breed"] = text
-        elif label == "GENDER" and text in {"male","female"}:
+        elif label == "GENDER" and text in {"male", "female"}:
             facets["gender"] = text
         elif label == "COLOR":
             facets["colors_any"].append(text)
-        elif label in {"STATE","LOCATION","CITY"}:
+        elif label in {"STATE", "LOCATION", "CITY"}:
             facets["state"] = text
+    
     facets["colors_any"] = sorted(set(facets["colors_any"])) or None
     return facets
 
 def sanitize_facets_ner_light(f: dict) -> dict:
-    out = {k: f.get(k) for k in ["animal","breed","gender","colors_any","state"]}
+    """Sanitize facets from NER"""
+    out = {k: f.get(k) for k in ["animal", "breed", "gender", "colors_any", "state"]}
     if out.get("colors_any"):
         cols = []
         for c in out["colors_any"]:
@@ -100,105 +149,126 @@ def sanitize_facets_ner_light(f: dict) -> dict:
         out["colors_any"] = sorted(set(cols)) or None
     return out
 
-# robust list parser for colors_canonical
+# ---------- Robust Data Parsing ----------
 def safe_list_from_cell(x) -> List[str]:
-    if x is None: return []
-    if isinstance(x, float) and np.isnan(x): return []
-    if isinstance(x, list): return [str(t).strip().lower() for t in x if str(t).strip()]
+    """Safely parse list data from various formats"""
+    if x is None:
+        return []
+    if isinstance(x, float) and np.isnan(x):
+        return []
+    if isinstance(x, list):
+        return [str(t).strip().lower() for t in x if str(t).strip()]
+    
     s = str(x).strip()
-    if not s: return []
+    if not s:
+        return []
+    
     if s.startswith("[") and s.endswith("]"):
         try:
             obj = json.loads(s)
-            if isinstance(obj, list): return [str(t).strip().lower() for t in obj if str(t).strip()]
+            if isinstance(obj, list):
+                return [str(t).strip().lower() for t in obj if str(t).strip()]
         except Exception:
             pass
         try:
             obj = ast.literal_eval(s)
-            if isinstance(obj, list): return [str(t).strip().lower() for t in obj if str(t).strip()]
+            if isinstance(obj, list):
+                return [str(t).strip().lower() for t in obj if str(t).strip()]
         except Exception:
             return []
+    
     if "," in s:
         return [t.strip().lower() for t in s.split(",") if t.strip()]
+    
     return [s.lower()] if s else []
 
-# ---------- candidate filtering (relaxed) ----------
+# ---------- Enhanced Filtering ----------
 def filter_once(df: pd.DataFrame, facets: Dict[str, Any]) -> pd.DataFrame:
-    out = df
-    # animal (string)
+    """Apply filters to dataframe based on facets"""
+    out = df.copy()
+    
+    # Animal filter (most important)
     if "animal" in out.columns and facets.get("animal"):
         out = out[out["animal"].astype(str).str.lower() == facets["animal"]]
-    # gender (string)
-    if "gender" in out.columns and facets.get("gender") in {"male","female"}:
+    
+    # Gender filter
+    if "gender" in out.columns and facets.get("gender") in {"male", "female"}:
         out = out[out["gender"].astype(str).str.lower() == facets["gender"]]
-    # state (string, case-insensitive)
+    
+    # State filter (case-insensitive)
     if "state" in out.columns and facets.get("state"):
         st = facets["state"].lower()
         out = out[out["state"].astype(str).str.lower().str.contains(re.escape(st), na=False)]
-    # colors (canonical list in column)
+    
+    # Colors filter (canonical list in column)
     if "colors_canonical" in out.columns and facets.get("colors_any"):
         want = set([c.lower() for c in facets["colors_any"]])
         def _hit(xs):
             xs_list = safe_list_from_cell(xs)
             return any(c in xs_list for c in want)
         out = out[out["colors_canonical"].apply(_hit)]
-    # breed (soft substring)
+    
+    # Breed filter (soft substring)
     if "breed" in out.columns and facets.get("breed"):
         b = str(facets["breed"]).lower()
         out = out[out["breed"].astype(str).str.lower().str.contains(re.escape(b), na=False)]
+    
     return out.reset_index(drop=True)
 
-def filter_with_relaxation(df: pd.DataFrame, facets: Dict[str, Any], order: List[str], min_floor: int = 300) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+def filter_with_relaxation(df: pd.DataFrame, facets: Dict[str, Any], 
+                          order: List[str], min_floor: int = 300) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """Apply filters with progressive relaxation if results are too few"""
     used = dict(facets or {})
     res = filter_once(df, used)
+    
+    # Progressive relaxation
     for key in order:
         if len(res) >= min_floor:
             break
         if used.get(key) not in (None, [], ""):
             used[key] = None
             res = filter_once(df, used)
+    
+    # Final fallback - keep only animal if present
     if len(res) == 0:
-        # keep only animal if present
-        keep = {"animal": used.get("animal"), "breed": None, "gender": None, "colors_any": None, "state": None}
+        keep = {"animal": used.get("animal"), "breed": None, "gender": None, 
+                "colors_any": None, "state": None}
         used = keep
         res = filter_once(df, used)
         if len(res) == 0:
             res = df
+    
     return res, used
 
 def make_boosted_query(user_text: str, used: dict) -> str:
+    """Create boosted query with facet terms"""
     facet_terms = []
-    for key in ["animal","breed","gender","state"]:
+    for key in ["animal", "breed", "gender", "state"]:
         if used.get(key):
             facet_terms.append(str(used[key]).lower())
     if used.get("colors_any"):
         facet_terms.extend([c.lower() for c in used["colors_any"]])
     return only_text(user_text + " " + " ".join(facet_terms))
 
-# ---------- embedding search ----------
+# ---------- Enhanced Embedding Search ----------
 def ann_search_faiss(faiss_index, q_vec: np.ndarray, pool_topn: int) -> List[Tuple[int, float]]:
-    import numpy as np
+    """Search using FAISS index"""
     D, I = faiss_index.search(q_vec.reshape(1, -1).astype("float32"), pool_topn)
     hits = []
     for idx, score in zip(I[0], D[0]):
         hits.append((int(idx), float(score)))
     return hits
 
-def emb_search(
-    q: str,
-    student,
-    doc_ids: np.ndarray,
-    doc_vecs: np.ndarray,
-    pool_topn: int = 200,
-    faiss_index = None,
-) -> List[Tuple[int, float]]:
+def emb_search(q: str, student, doc_ids: np.ndarray, doc_vecs: np.ndarray, 
+               pool_topn: int = 200, faiss_index=None) -> List[Tuple[int, float]]:
+    """Enhanced embedding search with FAISS support"""
     qv = student.encode([q], convert_to_numpy=True, normalize_embeddings=True)[0].astype("float32")
+    
     if faiss_index is not None:
         hits = ann_search_faiss(faiss_index, qv, pool_topn)
-        # FAISS returns positions; convert to pet IDs if your index was built on doc_vecs in same order
-        # If index was built on doc_vecs directly: ids = doc_ids[idx]
         return [(int(doc_ids[i]), float(s)) for (i, s) in hits]
-    # brute force
+    
+    # Brute force fallback
     sims = doc_vecs @ qv
     if pool_topn < sims.shape[0]:
         idx = np.argpartition(-sims, pool_topn)[:pool_topn]
@@ -207,42 +277,46 @@ def emb_search(
         idx = np.argsort(-sims)[::-1]
     return [(int(doc_ids[i]), float(sims[i])) for i in idx[:pool_topn]]
 
-# ---------- MMR re-ranking ----------
-def mmr_rerank(
-    candidates: List[Tuple[int, float]],
-    doc_embs: np.ndarray,
-    doc_ids: np.ndarray,
-    q_vec: np.ndarray,
-    k: int = 10,
-    lambda_mult: float = 0.7,
-) -> List[Tuple[int, float]]:
+# ---------- MMR Re-ranking ----------
+def mmr_rerank(candidates: List[Tuple[int, float]], doc_embs: np.ndarray, 
+               doc_ids: np.ndarray, q_vec: np.ndarray, k: int = 10, 
+               lambda_mult: float = 0.7) -> List[Tuple[int, float]]:
+    """Maximal Marginal Relevance re-ranking"""
     if not candidates:
         return []
-    # Map pid->idx
+    
+    # Map pet ID to index
     idx_map = {int(pid): i for i, pid in enumerate(doc_ids)}
-    # Precompute sim to query
+    
     sel = []
     cand = candidates.copy()
     picked = set()
+    
     while cand and len(sel) < k:
         best_pid, best_score = None, -1e9
         for pid, s in cand:
             i = idx_map.get(int(pid))
-            if i is None: 
+            if i is None:
                 continue
+            
+            # Calculate max similarity to already selected
             rep = 0.0
             for p_sel, _ in sel:
                 j = idx_map.get(int(p_sel))
-                if j is None: 
+                if j is None:
                     continue
                 rep = max(rep, float(doc_embs[i] @ doc_embs[j]))
+            
+            # MMR score
             mmr_score = lambda_mult * s - (1 - lambda_mult) * rep
             if mmr_score > best_score:
                 best_score = mmr_score
                 best_pid = pid
+        
         if best_pid is None:
             break
-        # move best_pid to sel
+        
+        # Move best to selected
         best_item = next((x for x in cand if x[0] == best_pid), None)
         if best_item:
             sel.append(best_item)
@@ -250,68 +324,5 @@ def mmr_rerank(
             cand = [x for x in cand if x[0] != best_pid]
         else:
             break
+    
     return sel
-
-# --- Public, UI-friendly entrypoint ---
-def search_pets(
-    text_query: str = "",
-    animal: Optional[str] = None,
-    state: Optional[str] = None,
-    breed: Optional[str] = None,
-    color: Optional[str] = None,
-    size: Optional[str] = None,
-    gender: Optional[str] = None,
-    fur_length: Optional[str] = None,
-    age_min: Optional[int] = None,
-    age_max: Optional[int] = None,
-    top_k: int = 60,
-    pets_df: Optional[pd.DataFrame] = None
-) -> pd.DataFrame:
-    """
-    Run hybrid/BM25 (if available) and then apply facet filters.
-    If your pipeline already builds candidates via embeddings, call it here.
-    """
-    # 1) Build initial candidate set (BM25 over name+desc as a simple default)
-    if pets_df is None:
-        # lazily load cached CSV path; adjust if you already keep a global in app
-        import os
-        from .config import local_pets_csv_path
-        pets_df = pd.read_csv(local_pets_csv_path())
-
-    text_cols = ["name","description_clean","breed","colors_canonical","state","animal"]
-    def _join(row):
-        return " ".join(str(row.get(c,"")) for c in text_cols)
-    corpus = {i: _join(r) for i, r in pets_df.iterrows()}
-
-    bm = BM25(); bm.fit(corpus)
-    q = only_text(text_query) if text_query else ""
-    cand_idx, scores = bm.search(q, topk=max(top_k, 200)) if q else (list(range(len(pets_df))), np.zeros(len(pets_df)))
-    cand = pets_df.iloc[cand_idx].copy()
-    cand.loc[:, "score"] = scores[:len(cand)]
-
-    # 2) Apply facet filters (keep tolerant matching)
-    def _norm(x): return str(x).strip().lower()
-    def _match(col, val):
-        if val is None: return True
-        if col not in cand.columns: return True
-        s = cand[col].astype(str).str.lower()
-        v = _norm(val)
-        return s.str.contains(re.escape(v), na=False)
-
-    mask = (
-        _match("animal", animal) &
-        _match("state", state) &
-        _match("breed", breed) &
-        (_match("colors_canonical", color) | _match("color", color)) &
-        _match("size", size) &
-        _match("gender", gender) &
-        _match("fur_length", fur_length)
-    )
-    if "age_months" in cand.columns and (age_min is not None or age_max is not None):
-        am = pd.to_numeric(cand["age_months"], errors="coerce")
-        if age_min is not None: mask &= (am >= age_min)
-        if age_max is not None: mask &= (am <  age_max)
-
-    out = cand.loc[mask].copy()
-    out = out.sort_values("score", ascending=False).head(top_k).reset_index(drop=True)
-    return out
