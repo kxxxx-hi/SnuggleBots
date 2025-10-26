@@ -1336,33 +1336,35 @@ def main():
         # System status
         st.markdown("## 📊 System Status")
         
-        # RAG system status
+        # Get status info
         rag = st.session_state.get("_boot_rag")
-        if rag is not None:
-            st.success("✅ RAG System Ready")
-            st.caption("Pet care questions enabled")
-        else:
-            st.error("❌ RAG System Offline")
-            st.caption("Pet care questions unavailable")
-        
-        # Pet search status
+        bot = st.session_state.get("_boot_bot")
         env = st.session_state.get("_boot_env")
         dfp = env.get("dfp") if env else None
-        if dfp is not None:
-            st.success("✅ Pet Search Ready")
-            st.caption("Adoption search enabled")
-        else:
-            st.error("❌ Pet Search Offline")
-            st.caption("Adoption search unavailable")
         
-        # Bot status
-        bot = st.session_state.get("_boot_bot")
-        if bot is not None:
-            st.success("✅ Chatbot Ready")
-            st.caption("Conversation enabled")
+        # Overall app status
+        rag_ok = rag is not None and bot is not None
+        env_ok = dfp is not None
+        app_status_ok = rag_ok and env_ok
+        
+        # App Status
+        if app_status_ok:
+            st.success("✅ **App Status:** All good")
         else:
-            st.error("❌ Chatbot Offline")
-            st.caption("Conversation unavailable")
+            st.warning("⚠️ **App Status:** Check modules")
+        
+        # RAG / Chatbot status
+        if rag_ok:
+            st.success("✅ **RAG / Chatbot:** Online")
+        else:
+            st.error("❌ **RAG / Chatbot:** Unavailable")
+        
+        # Pet search status with count
+        if env_ok:
+            pet_count = len(dfp)
+            st.success(f"✅ **Pet Search:** {pet_count} pets available")
+        else:
+            st.error("❌ **Pet Search:** Unavailable")
         
         st.markdown("---")
         
@@ -1519,19 +1521,8 @@ def main():
     def badge(status): return "success" if status else "error"
     def icon(status): return "✅" if status else "❌"
 
-    pets_detail = f"{len(env['dfp'])} pets available" if env_ok else "Unavailable"
-    app_status_ok = rag_ok and env_ok
-    app_status_text = "All Systems Ready" if app_status_ok else "Issues Detected"
-
-    st.markdown(
-        "<div class='status-bar'>"
-        "<div class='status-grid'>"
-        f"<div class='status-item {badge(app_status_ok)}'><span class='status-icon'>{icon(app_status_ok)}</span><div class='status-text'>App Status</div><div class='status-detail'>{app_status_ok and 'All good' or 'Check modules'}</div></div>"
-        f"<div class='status-item {badge(rag_ok)}'><span class='status-icon'>{icon(rag_ok)}</span><div class='status-text'>RAG / Chatbot</div><div class='status-detail'>{'Online' if rag_ok else 'Unavailable'}</div></div>"
-        f"<div class='status-item {badge(env_ok)}'><span class='status-icon'>{icon(env_ok)}</span><div class='status-text'>Pet Search</div><div class='status-detail'>{pets_detail}</div></div>"
-        "</div></div>", unsafe_allow_html=True
-    )
-
+    # Status boxes moved to sidebar for cleaner main page
+    
     # Render prior messages
     for m in st.session_state.messages:
         with st.chat_message(m["role"]):
