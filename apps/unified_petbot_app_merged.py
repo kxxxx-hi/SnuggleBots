@@ -33,12 +33,48 @@ st.markdown("""
     margin-bottom: 20px !important;
 }
 
+/* Reduce title and header font sizes */
+h1 {
+    font-size: 2rem !important;
+}
+
+h2 {
+    font-size: 1.5rem !important;
+}
+
+h3 {
+    font-size: 1.2rem !important;
+}
+
+/* Sidebar headers smaller */
+.css-1d391kg h2, [data-testid="stSidebar"] h2 {
+    font-size: 1.3rem !important;
+}
+
 /* Add padding for mobile devices */
 @media (max-width: 768px) {
     .main .block-container {
         padding-bottom: 150px !important; /* Extra padding for mobile */
         padding-left: 1rem !important;
         padding-right: 1rem !important;
+    }
+    
+    /* Reduce font sizes for mobile */
+    h1 {
+        font-size: 1.5rem !important;
+    }
+    
+    h2 {
+        font-size: 1.2rem !important;
+    }
+    
+    h3 {
+        font-size: 1rem !important;
+    }
+    
+    /* Sidebar headers even smaller on mobile */
+    .css-1d391kg h2, [data-testid="stSidebar"] h2 {
+        font-size: 1.1rem !important;
     }
     
     /* Ensure buttons and inputs are properly spaced */
@@ -58,6 +94,19 @@ st.markdown("""
 @media (max-width: 480px) {
     .main .block-container {
         padding-bottom: 180px !important; /* Even more padding for smaller screens */
+    }
+    
+    /* Even smaller fonts for small phones */
+    h1 {
+        font-size: 1.3rem !important;
+    }
+    
+    h2 {
+        font-size: 1.1rem !important;
+    }
+    
+    h3 {
+        font-size: 0.95rem !important;
     }
 }
 </style>
@@ -909,16 +958,37 @@ PINK_CSS = """
     
     .main-header h1 {
         color: white;
-        font-size: 3rem;
+        font-size: 2rem;
         margin: 0;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }
     
     .main-header p {
         color: white;
-        font-size: 1.2rem;
+        font-size: 1rem;
         margin: 0.5rem 0 0 0;
         opacity: 0.9;
+    }
+    
+    /* Responsive header sizes for mobile */
+    @media (max-width: 768px) {
+        .main-header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .main-header p {
+            font-size: 0.9rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .main-header h1 {
+            font-size: 1.3rem;
+        }
+        
+        .main-header p {
+            font-size: 0.85rem;
+        }
     }
     
     /* Chat container styling */
@@ -1352,14 +1422,29 @@ def main():
         <style>
         .pm-loading { display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
           min-height:64vh; padding-top:6vh; text-align:center; }
-        .pm-loading .paw { font-size:3.6rem; animation: pm-spin 2s linear infinite; }
-        .pm-loading .chat { font-size:2.2rem; margin-top:8px; animation: pm-bounce 1.5s infinite; }
-        .pm-loading h2 { margin:10px 0 6px 0; color:#ff4d88; }
-        .pm-loading p  { margin:4px 0; color:#444; }
+        .pm-loading .paw { font-size:2.5rem; animation: pm-spin 2s linear infinite; }
+        .pm-loading .chat { font-size:1.8rem; margin-top:8px; animation: pm-bounce 1.5s infinite; }
+        .pm-loading h2 { margin:10px 0 6px 0; color:#ff4d88; font-size: 1.5rem; }
+        .pm-loading p  { margin:4px 0; color:#444; font-size: 1rem; }
         .pm-tip { margin-top:10px; font-size:.95rem; color:#333; background:rgba(255,255,255,0.85);
           border-radius:10px; padding:8px 12px; box-shadow:0 2px 8px rgba(0,0,0,0.08); display:inline-block; }
         @keyframes pm-spin { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
         @keyframes pm-bounce { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-6px);} }
+        
+        /* Mobile loading screen adjustments */
+        @media (max-width: 768px) {
+          .pm-loading .paw { font-size:2rem; }
+          .pm-loading .chat { font-size:1.5rem; }
+          .pm-loading h2 { font-size: 1.2rem; }
+          .pm-loading p  { font-size: 0.9rem; }
+        }
+        
+        @media (max-width: 480px) {
+          .pm-loading .paw { font-size:1.8rem; }
+          .pm-loading .chat { font-size:1.3rem; }
+          .pm-loading h2 { font-size: 1.1rem; }
+          .pm-loading p  { font-size: 0.85rem; }
+        }
         </style>
         """, unsafe_allow_html=True)
 
