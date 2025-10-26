@@ -19,6 +19,50 @@ from typing import List, Dict, Any, Tuple, Optional, Set
 import streamlit as st
 st.set_page_config(page_title="Pawfect Match", layout="wide")
 
+# Custom CSS for mobile-friendly layout
+st.markdown("""
+<style>
+/* Mobile-friendly padding and layout fixes */
+.main .block-container {
+    padding-bottom: 120px !important; /* Extra padding for mobile browser UI */
+    padding-top: 2rem !important;
+}
+
+/* Ensure chat input is accessible on mobile */
+.stChatInput {
+    margin-bottom: 20px !important;
+}
+
+/* Add padding for mobile devices */
+@media (max-width: 768px) {
+    .main .block-container {
+        padding-bottom: 150px !important; /* Extra padding for mobile */
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    
+    /* Ensure buttons and inputs are properly spaced */
+    .stButton > button {
+        margin-bottom: 10px !important;
+    }
+    
+    /* Fix any overlapping elements */
+    .stChatInput {
+        position: relative !important;
+        z-index: 1 !important;
+        margin-bottom: 30px !important;
+    }
+}
+
+/* General mobile improvements */
+@media (max-width: 480px) {
+    .main .block-container {
+        padding-bottom: 180px !important; /* Even more padding for smaller screens */
+    }
+}
+</style>
+""", unsafe_allow_html=True)
+
 import sys
 import numpy as np
 import pandas as pd
@@ -1393,8 +1437,14 @@ def main():
         with st.chat_message(m["role"]):
             st.markdown(m["content"])
 
+    # Add spacing before chat input for mobile accessibility
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    
     # Check if there's a new message from either chat input or buttons
     prompt = st.chat_input("Keep your questions short and clear so I match your pawfect answer!")
+    
+    # Add extra spacing after chat input for mobile
+    st.markdown("<br><br>", unsafe_allow_html=True)
     
     # If there's a new message from chat input, add it to messages
     if prompt:
